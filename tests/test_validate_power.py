@@ -495,3 +495,17 @@ def test_template_py_bs4_is_valid_python():
     assert "BRIGHTDATA_UNLOCKER_ZONE" in src
     assert "https://api.brightdata.com/request" in src
     assert "def scrape_" in src
+
+
+def test_template_ts_cheerio_has_expected_exports_and_imports():
+    """The TS module template must declare the right imports, exports, and env-var reads."""
+    p = POWER_DIR / "templates" / "module" / "ts-cheerio.ts"
+    assert p.is_file(), f"missing {p}"
+    src = p.read_text(encoding="utf-8")
+    assert "import * as cheerio" in src or "import cheerio" in src
+    assert "export async function scrape" in src
+    assert "process.env.BRIGHTDATA_API_KEY" in src
+    assert "process.env.BRIGHTDATA_UNLOCKER_ZONE" in src
+    assert "https://api.brightdata.com/request" in src
+    assert "{{TARGET_NAME}}" in src
+    assert "{{TARGET_URL}}" in src
