@@ -100,17 +100,35 @@ def main(argv: list[str]) -> int:
                     )
 
     phase3_path = power_dir / "steering" / "phase3-integrate.md"
+    v1_required = {
+        "templates/module/py-bs4.py",
+        "templates/module/ts-cheerio.ts",
+        "templates/route/next-app-router.ts",
+        "templates/route/fastapi.py",
+        "templates/tool/anthropic-sdk-ts.ts",
+        "templates/tool/anthropic-sdk-py.py",
+        "templates/fallback/curl.sh",
+    }
     if phase3_path.is_file():
         phase3_text = phase3_path.read_text(encoding="utf-8")
-        # Match patterns like `templates/module/ts-cheerio.ts` or `templates/route/next-app-router.ts`
-        template_refs = re.findall(
+        template_refs = set(re.findall(
             r"templates/(?:module|route|tool|fallback)/[A-Za-z0-9_./-]+\.(?:ts|py|sh)",
             phase3_text,
-        )
-        for rel in sorted(set(template_refs)):
+        ))
+        for rel in sorted(template_refs):
             full = power_dir / rel
             if not full.is_file():
-                print(f"WARN: missing template {rel} (referenced in phase3-integrate.md)")
+                if rel in v1_required:
+                    failures.append(f"missing required v1 template: {rel}")
+                else:
+                    print(f"WARN: missing template {rel} (referenced in phase3-integrate.md)")
+    # Also FAIL if any v1_required is missing even if not referenced in phase3
+    for rel in sorted(v1_required):
+        full = power_dir / rel
+        if not full.is_file():
+            msg = f"missing required v1 template: {rel}"
+            if msg not in failures:
+                failures.append(msg)
 
     if failures:
         for f in failures:

@@ -39,8 +39,29 @@ VALID_STEERING_WORKFLOW = (
 )
 
 
-def _add_valid_steering(base: "Path") -> None:
-    """Create a minimal valid steering/ directory under *base*."""
+def _add_v1_templates(base: "Path") -> None:
+    """Create stub v1 required templates under *base*/templates/."""
+    _v1_stubs = {
+        "templates/module/py-bs4.py": "# stub\n",
+        "templates/module/ts-cheerio.ts": "// stub\n",
+        "templates/route/next-app-router.ts": "// stub\n",
+        "templates/route/fastapi.py": "# stub\n",
+        "templates/tool/anthropic-sdk-ts.ts": "// stub\n",
+        "templates/tool/anthropic-sdk-py.py": "# stub\n",
+        "templates/fallback/curl.sh": "# stub\n",
+    }
+    for rel, content in _v1_stubs.items():
+        p = base / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(content, encoding="utf-8")
+
+
+def _add_valid_steering(base: "Path", include_templates: bool = True) -> None:
+    """Create a minimal valid steering/ directory under *base*.
+
+    If *include_templates* is True (default), also creates stub v1 templates
+    so the validator's v1-required check does not fire.
+    """
     steering = base / "steering"
     steering.mkdir(exist_ok=True)
     (steering / "scrape-workflow.md").write_text(VALID_STEERING_WORKFLOW, encoding="utf-8")
@@ -48,6 +69,8 @@ def _add_valid_steering(base: "Path") -> None:
     (steering / "phase2-scraping-playbook.md").write_text("# P2", encoding="utf-8")
     (steering / "phase3-integrate.md").write_text("# P3", encoding="utf-8")
     (steering / "phase4-mcp-and-verify.md").write_text("# P4", encoding="utf-8")
+    if include_templates:
+        _add_v1_templates(base)
 
 
 def run_validator(*args: str) -> subprocess.CompletedProcess:
@@ -65,6 +88,7 @@ def _failure_lines(output: str) -> "list[str]":
 def test_validator_runs_and_reports_missing_power_md(tmp_path):
     """With a directory that has mcp.json but no POWER.md, the POWER.md-missing and steering-missing rules fire."""
     (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
+    _add_v1_templates(tmp_path)
     result = run_validator(str(tmp_path))
     output = result.stdout + result.stderr
     assert result.returncode != 0, f"validator output was: {output!r}"
@@ -418,22 +442,23 @@ def _write_phase3_with_template_refs(tmp_path: "Path", refs: "list[str]") -> Non
 # ---------------------------------------------------------------------------
 
 def test_validator_warns_when_phase3_references_missing_template(tmp_path):
-    """Validator emits WARN for each template path in phase3 that doesn't exist on disk, but still exits 0."""
+    """Validator emits WARN for each non-v1 template path in phase3 that doesn't exist on disk, but still exits 0."""
     (tmp_path / "POWER.md").write_text(VALID_POWER_MD, encoding="utf-8")
     (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
     _add_valid_steering(tmp_path)
+    # Use non-v1 (v1.1) template paths so the validator WARNs rather than FAILs
     _write_phase3_with_template_refs(
         tmp_path,
-        ["templates/module/ts-cheerio.ts", "templates/route/next-app-router.ts"],
+        ["templates/module/ts-langchain.ts", "templates/route/express.ts"],
     )
     result = run_validator(str(tmp_path))
     output = result.stdout + result.stderr
     assert result.returncode == 0, f"validator should exit 0 on warnings; output: {output!r}"
-    assert "WARN: missing template templates/module/ts-cheerio.ts" in output, (
-        f"expected WARN for ts-cheerio.ts; output: {output!r}"
+    assert "WARN: missing template templates/module/ts-langchain.ts" in output, (
+        f"expected WARN for ts-langchain.ts; output: {output!r}"
     )
-    assert "WARN: missing template templates/route/next-app-router.ts" in output, (
-        f"expected WARN for next-app-router.ts; output: {output!r}"
+    assert "WARN: missing template templates/route/express.ts" in output, (
+        f"expected WARN for express.ts; output: {output!r}"
     )
 
 
@@ -570,3 +595,51 @@ def test_template_curl_fallback():
     assert "Authorization: Bearer" in src
     # Must include guidance for adapting to another language
     assert "adapt" in src.lower() or "translate" in src.lower()
+
+
+V1_REQUIRED_TEMPLATES = [
+    "templates/module/py-bs4.py",
+    "templates/module/ts-cheerio.ts",
+    "templates/route/next-app-router.ts",
+    "templates/route/fastapi.py",
+    "templates/tool/anthropic-sdk-ts.ts",
+    "templates/tool/anthropic-sdk-py.py",
+    "templates/fallback/curl.sh",
+]
+
+
+def test_v1_required_templates_all_present():
+    """All v1 required templates must exist on disk in the real power directory."""
+    for rel in V1_REQUIRED_TEMPLATES:
+        path = POWER_DIR / rel
+        assert path.is_file(), f"missing required v1 template: {rel}"
+
+
+def test_validator_passes_when_v1_templates_present():
+    """Validator should exit 0 with all v1 templates present, with no v1 WARN lines."""
+    result = run_validator(str(POWER_DIR))
+    out = result.stdout + result.stderr
+    assert result.returncode == 0, f"validator failed: {out!r}"
+    for rel in V1_REQUIRED_TEMPLATES:
+        assert f"WARN: missing template {rel}" not in out, (
+            f"unexpected WARN for v1 template {rel}, output: {out!r}"
+        )
+
+
+def test_validator_fails_when_v1_template_is_missing(tmp_path):
+    """If a v1 template is absent on disk, validator should FAIL (not WARN)."""
+    (tmp_path / "POWER.md").write_text(VALID_POWER_MD, encoding="utf-8")
+    (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
+    _add_valid_steering(tmp_path, include_templates=False)
+    # Build a phase3 that references a v1 path that won't exist in tmp_path
+    (tmp_path / "steering" / "phase3-integrate.md").write_text(
+        "# Phase 3 (test stub)\n\nReferences `templates/module/py-bs4.py`.\n",
+        encoding="utf-8",
+    )
+    # Note: tmp_path has no templates/ directory at all, so all v1 paths are missing
+    result = run_validator(str(tmp_path))
+    output = result.stdout + result.stderr
+    assert result.returncode != 0, f"expected failure, got: {output!r}"
+    assert "missing required v1 template: templates/module/py-bs4.py" in output, (
+        f"validator output was: {output!r}"
+    )
