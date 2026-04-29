@@ -101,6 +101,7 @@ def main(argv: list[str]) -> int:
 
     phase3_path = power_dir / "steering" / "phase3-integrate.md"
     v1_required = {
+        # v1 templates
         "templates/module/py-bs4.py",
         "templates/module/ts-cheerio.ts",
         "templates/route/next-app-router.ts",
@@ -108,6 +109,22 @@ def main(argv: list[str]) -> int:
         "templates/tool/anthropic-sdk-ts.ts",
         "templates/tool/anthropic-sdk-py.py",
         "templates/fallback/curl.sh",
+        # v1.1 templates
+        "templates/module/ts-fetch.ts",
+        "templates/module/py-stdlib.py",
+        "templates/route/next-pages-router.ts",
+        "templates/route/express.ts",
+        "templates/route/fastify.ts",
+        "templates/route/hono.ts",
+        "templates/route/koa.ts",
+        "templates/route/flask.py",
+        "templates/route/django.py",
+        "templates/tool/langchain-ts.ts",
+        "templates/tool/langchain-py.py",
+        "templates/tool/openai-ts.ts",
+        "templates/tool/openai-py.py",
+        "templates/tool/mastra.ts",
+        "templates/tool/vercel-ai-sdk.ts",
     }
     if phase3_path.is_file():
         phase3_text = phase3_path.read_text(encoding="utf-8")

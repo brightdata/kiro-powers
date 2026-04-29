@@ -40,8 +40,9 @@ VALID_STEERING_WORKFLOW = (
 
 
 def _add_v1_templates(base: "Path") -> None:
-    """Create stub v1 required templates under *base*/templates/."""
+    """Create stub v1 and v1.1 required templates under *base*/templates/."""
     _v1_stubs = {
+        # v1 templates
         "templates/module/py-bs4.py": "# stub\n",
         "templates/module/ts-cheerio.ts": "// stub\n",
         "templates/route/next-app-router.ts": "// stub\n",
@@ -49,6 +50,22 @@ def _add_v1_templates(base: "Path") -> None:
         "templates/tool/anthropic-sdk-ts.ts": "// stub\n",
         "templates/tool/anthropic-sdk-py.py": "# stub\n",
         "templates/fallback/curl.sh": "# stub\n",
+        # v1.1 templates
+        "templates/module/ts-fetch.ts": "// stub\n",
+        "templates/module/py-stdlib.py": "# stub\n",
+        "templates/route/next-pages-router.ts": "// stub\n",
+        "templates/route/express.ts": "// stub\n",
+        "templates/route/fastify.ts": "// stub\n",
+        "templates/route/hono.ts": "// stub\n",
+        "templates/route/koa.ts": "// stub\n",
+        "templates/route/flask.py": "# stub\n",
+        "templates/route/django.py": "# stub\n",
+        "templates/tool/langchain-ts.ts": "// stub\n",
+        "templates/tool/langchain-py.py": "# stub\n",
+        "templates/tool/openai-ts.ts": "// stub\n",
+        "templates/tool/openai-py.py": "# stub\n",
+        "templates/tool/mastra.ts": "// stub\n",
+        "templates/tool/vercel-ai-sdk.ts": "// stub\n",
     }
     for rel, content in _v1_stubs.items():
         p = base / rel
@@ -442,23 +459,23 @@ def _write_phase3_with_template_refs(tmp_path: "Path", refs: "list[str]") -> Non
 # ---------------------------------------------------------------------------
 
 def test_validator_warns_when_phase3_references_missing_template(tmp_path):
-    """Validator emits WARN for each non-v1 template path in phase3 that doesn't exist on disk, but still exits 0."""
+    """Validator emits WARN for each non-required template path in phase3 that doesn't exist on disk, but still exits 0."""
     (tmp_path / "POWER.md").write_text(VALID_POWER_MD, encoding="utf-8")
     (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
     _add_valid_steering(tmp_path)
-    # Use non-v1 (v1.1) template paths so the validator WARNs rather than FAILs
+    # Use paths that will never be in v1_required so the validator WARNs rather than FAILs
     _write_phase3_with_template_refs(
         tmp_path,
-        ["templates/module/ts-langchain.ts", "templates/route/express.ts"],
+        ["templates/module/ts-v2-future.ts", "templates/route/bun-http.ts"],
     )
     result = run_validator(str(tmp_path))
     output = result.stdout + result.stderr
     assert result.returncode == 0, f"validator should exit 0 on warnings; output: {output!r}"
-    assert "WARN: missing template templates/module/ts-langchain.ts" in output, (
-        f"expected WARN for ts-langchain.ts; output: {output!r}"
+    assert "WARN: missing template templates/module/ts-v2-future.ts" in output, (
+        f"expected WARN for ts-v2-future.ts; output: {output!r}"
     )
-    assert "WARN: missing template templates/route/express.ts" in output, (
-        f"expected WARN for express.ts; output: {output!r}"
+    assert "WARN: missing template templates/route/bun-http.ts" in output, (
+        f"expected WARN for bun-http.ts; output: {output!r}"
     )
 
 
@@ -792,3 +809,11 @@ def test_template_vercel_ai_sdk_tool():
     src = p.read_text(encoding="utf-8")
     assert "scrape{{TARGET_NAME}}" in src
     assert "from \"ai\"" in src or "from 'ai'" in src
+
+
+def test_validator_no_warn_lines_after_v1_1():
+    """After v1.1, the validator should emit zero WARN lines on the real power dir."""
+    result = run_validator(str(POWER_DIR))
+    out = result.stdout + result.stderr
+    assert result.returncode == 0, f"validator failed: {out!r}"
+    assert "WARN" not in out, f"unexpected WARN: {out!r}"
