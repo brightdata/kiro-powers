@@ -359,3 +359,18 @@ def test_phase2_playbook_covers_all_apis_and_pagination_patterns():
         "https://api.brightdata.com/datasets/list",  # pre-built lookup
     ]:
         assert keyword.lower() in text.lower(), f"phase2 missing keyword: {keyword}"
+
+
+def test_phase3_integrate_references_template_directories():
+    """Phase 3 must reference the templates/ subdirectories the orchestrator picks from."""
+    p = POWER_DIR / "steering" / "phase3-integrate.md"
+    assert p.is_file(), f"missing {p}"
+    text = p.read_text(encoding="utf-8")
+    for keyword in [
+        "templates/module/", "templates/route/", "templates/tool/", "templates/fallback/",
+        "BRIGHTDATA_API_KEY", "BRIGHTDATA_UNLOCKER_ZONE",
+        ".env.example", "README.md",
+        "confirmation",  # gate before writing
+        "never overwrite", "do not overwrite",  # safety
+    ]:
+        assert keyword.lower() in text.lower(), f"phase3 missing keyword: {keyword}"
