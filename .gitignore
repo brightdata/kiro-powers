@@ -1,0 +1,20 @@
+# The upstream powers repo has its own git history inside powers/.
+# We track the existing powers as plain files, not via submodule, so
+# ignore its inner .git directory.
+powers/.git/
+powers/**/.git/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+
+# Local env files
+.env
+.env.local
