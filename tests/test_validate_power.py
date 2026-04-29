@@ -643,3 +643,34 @@ def test_validator_fails_when_v1_template_is_missing(tmp_path):
     assert "missing required v1 template: templates/module/py-bs4.py" in output, (
         f"validator output was: {output!r}"
     )
+
+
+def test_template_ts_fetch_module():
+    """ts-fetch.ts module should parse and not depend on cheerio."""
+    p = POWER_DIR / "templates" / "module" / "ts-fetch.ts"
+    assert p.is_file(), f"missing {p}"
+    src = p.read_text(encoding="utf-8")
+    assert "import * as cheerio" not in src, "ts-fetch should not import cheerio"
+    assert "import cheerio" not in src
+    assert "export async function scrape" in src
+    assert "https://api.brightdata.com/request" in src
+    assert "process.env.BRIGHTDATA_API_KEY" in src
+    assert "{{TARGET_NAME}}" in src
+
+
+def test_template_py_stdlib_module():
+    """py-stdlib.py module should parse and use html.parser from stdlib (no bs4)."""
+    import ast
+    p = POWER_DIR / "templates" / "module" / "py-stdlib.py"
+    assert p.is_file(), f"missing {p}"
+    src = p.read_text(encoding="utf-8")
+    src_filled = (
+        src.replace("{{TARGET_NAME}}", "x")
+           .replace("{{TARGET_URL}}", "https://e.com")
+           .replace("{{CONCURRENCY}}", "20")
+    )
+    ast.parse(src_filled)
+    assert "from bs4" not in src, "py-stdlib should not import bs4"
+    assert "html.parser" in src or "HTMLParser" in src
+    assert "def scrape_" in src
+    assert "BRIGHTDATA_API_KEY" in src
