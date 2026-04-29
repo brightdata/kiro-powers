@@ -331,3 +331,15 @@ def test_validator_passes_with_complete_steering(tmp_path):
     result = run_validator(str(tmp_path))
     assert result.returncode == 0, f"unexpected failure: {result.stdout + result.stderr!r}"
     assert "OK" in result.stdout
+
+
+def test_phase1_detect_covers_all_pattern_branches():
+    """Phase 1 must document module / route / agent-tool branches and greenfield handling."""
+    p = POWER_DIR / "steering" / "phase1-detect-and-plan.md"
+    assert p.is_file(), f"missing {p}"
+    text = p.read_text(encoding="utf-8")
+    for keyword in ["module", "API route", "agent tool", "greenfield",
+                    "package.json", "pyproject.toml",
+                    "next", "express", "fastapi", "flask",
+                    "langchain", "anthropic", "openai"]:
+        assert keyword.lower() in text.lower(), f"phase1 missing keyword: {keyword}"
