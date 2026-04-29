@@ -519,3 +519,16 @@ def test_template_next_app_router_route():
     assert "export async function GET" in src or "export const GET" in src
     assert "scrape{{TARGET_NAME}}" in src or "scrape" in src.lower()
     assert "NextResponse" in src or "Response" in src
+
+
+def test_template_fastapi_route():
+    """FastAPI route must use APIRouter and call the scraper module."""
+    import ast
+    p = POWER_DIR / "templates" / "route" / "fastapi.py"
+    assert p.is_file(), f"missing {p}"
+    src = p.read_text(encoding="utf-8")
+    src_filled = src.replace("{{TARGET_NAME}}", "competitor")
+    ast.parse(src_filled)
+    assert "APIRouter" in src
+    assert "scrape_{{TARGET_NAME}}" in src
+    assert "@router.get" in src or "@router.post" in src
