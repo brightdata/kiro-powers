@@ -543,3 +543,16 @@ def test_template_anthropic_sdk_ts_tool():
     assert "description:" in src
     assert "input_schema" in src
     assert "scrape{{TARGET_NAME}}" in src or "scrape_" in src.lower()
+
+
+def test_template_anthropic_sdk_py_tool():
+    """Anthropic SDK Python tool must define SCRAPE_TOOL and run_scrape_tool."""
+    import ast
+    p = POWER_DIR / "templates" / "tool" / "anthropic-sdk-py.py"
+    assert p.is_file(), f"missing {p}"
+    src = p.read_text(encoding="utf-8")
+    src_filled = src.replace("{{TARGET_NAME}}", "competitor").replace("{{TARGET_URL}}", "https://example.com")
+    ast.parse(src_filled)
+    assert "SCRAPE_TOOL" in src or "scrape_tool" in src.lower()
+    assert "input_schema" in src
+    assert "scrape_{{TARGET_NAME}}" in src
