@@ -392,3 +392,85 @@ def test_phase4_covers_mcp_and_smoke_test():
         "phase 2",       # back-link on smoke-test failure
     ]:
         assert keyword.lower() in text.lower(), f"phase4 missing keyword: {keyword}"
+
+
+# ---------------------------------------------------------------------------
+# Helper
+# ---------------------------------------------------------------------------
+
+def _write_phase3_with_template_refs(tmp_path: "Path", refs: "list[str]") -> None:
+    """Overwrite phase3-integrate.md with minimal content that mentions each ref path."""
+    body_lines = [
+        "# Phase 3: Integrate (test stub)",
+        "",
+        "References these templates:",
+        "",
+    ]
+    body_lines.extend(f"- `{ref}`" for ref in refs)
+    body_lines.append("")
+    (tmp_path / "steering" / "phase3-integrate.md").write_text(
+        "\n".join(body_lines), encoding="utf-8"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Template path consistency check tests
+# ---------------------------------------------------------------------------
+
+def test_validator_warns_when_phase3_references_missing_template(tmp_path):
+    """Validator emits WARN for each template path in phase3 that doesn't exist on disk, but still exits 0."""
+    (tmp_path / "POWER.md").write_text(VALID_POWER_MD, encoding="utf-8")
+    (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
+    _add_valid_steering(tmp_path)
+    _write_phase3_with_template_refs(
+        tmp_path,
+        ["templates/module/ts-cheerio.ts", "templates/route/next-app-router.ts"],
+    )
+    result = run_validator(str(tmp_path))
+    output = result.stdout + result.stderr
+    assert result.returncode == 0, f"validator should exit 0 on warnings; output: {output!r}"
+    assert "WARN: missing template templates/module/ts-cheerio.ts" in output, (
+        f"expected WARN for ts-cheerio.ts; output: {output!r}"
+    )
+    assert "WARN: missing template templates/route/next-app-router.ts" in output, (
+        f"expected WARN for next-app-router.ts; output: {output!r}"
+    )
+
+
+def test_validator_does_not_warn_when_template_exists(tmp_path):
+    """Validator does NOT emit a WARN for a template path that actually exists on disk."""
+    (tmp_path / "POWER.md").write_text(VALID_POWER_MD, encoding="utf-8")
+    (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
+    _add_valid_steering(tmp_path)
+    _write_phase3_with_template_refs(
+        tmp_path,
+        ["templates/module/ts-cheerio.ts"],
+    )
+    # Create the referenced template file
+    (tmp_path / "templates" / "module").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "templates" / "module" / "ts-cheerio.ts").write_text(
+        "// placeholder template\n", encoding="utf-8"
+    )
+    result = run_validator(str(tmp_path))
+    output = result.stdout + result.stderr
+    assert result.returncode == 0, f"validator should exit 0; output: {output!r}"
+    assert "WARN: missing template templates/module/ts-cheerio.ts" not in output, (
+        f"should not warn for existing template; output: {output!r}"
+    )
+
+
+def test_validator_only_recognizes_known_template_subdirs(tmp_path):
+    """Validator does NOT warn for paths under unrecognised template subdirs (not module/route/tool/fallback)."""
+    (tmp_path / "POWER.md").write_text(VALID_POWER_MD, encoding="utf-8")
+    (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
+    _add_valid_steering(tmp_path)
+    _write_phase3_with_template_refs(
+        tmp_path,
+        ["templates/something_else/foo.py"],
+    )
+    result = run_validator(str(tmp_path))
+    output = result.stdout + result.stderr
+    assert result.returncode == 0, f"validator should exit 0; output: {output!r}"
+    assert "WARN: missing template templates/something_else/foo.py" not in output, (
+        f"should not warn for non-canonical subdir; output: {output!r}"
+    )

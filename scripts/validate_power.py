@@ -99,6 +99,19 @@ def main(argv: list[str]) -> int:
                         f"scrape-workflow.md: must reference '{phase}' by exact filename"
                     )
 
+    phase3_path = power_dir / "steering" / "phase3-integrate.md"
+    if phase3_path.is_file():
+        phase3_text = phase3_path.read_text(encoding="utf-8")
+        # Match patterns like `templates/module/ts-cheerio.ts` or `templates/route/next-app-router.ts`
+        template_refs = re.findall(
+            r"templates/(?:module|route|tool|fallback)/[A-Za-z0-9_./-]+\.(?:ts|py|sh)",
+            phase3_text,
+        )
+        for rel in sorted(set(template_refs)):
+            full = power_dir / rel
+            if not full.is_file():
+                print(f"WARN: missing template {rel} (referenced in phase3-integrate.md)")
+
     if failures:
         for f in failures:
             fail(f)
