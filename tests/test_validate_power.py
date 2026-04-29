@@ -58,14 +58,19 @@ def run_validator(*args: str) -> subprocess.CompletedProcess:
     )
 
 
+def _failure_lines(output: str) -> "list[str]":
+    return [line for line in output.splitlines() if line.startswith("FAIL:")]
+
+
 def test_validator_runs_and_reports_missing_power_md(tmp_path):
-    """With a directory that has mcp.json but no POWER.md, only the missing-file rule for POWER.md should fire."""
+    """With a directory that has mcp.json but no POWER.md, the POWER.md-missing and steering-missing rules fire."""
     (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
     result = run_validator(str(tmp_path))
     output = result.stdout + result.stderr
     assert result.returncode != 0, f"validator output was: {output!r}"
-    assert "missing required file" in output, f"validator output was: {output!r}"
-    assert "POWER.md" in output, f"validator output was: {output!r}"
+    fails = _failure_lines(output)
+    assert len(fails) == 2, f"expected exactly two FAIL lines, got: {fails}"
+    assert any("POWER.md" in f and "missing required file" in f for f in fails), f"validator output was: {output!r}"
 
 
 def test_validator_fails_when_powermd_missing_frontmatter(tmp_path):
@@ -73,10 +78,13 @@ def test_validator_fails_when_powermd_missing_frontmatter(tmp_path):
     power_md = tmp_path / "POWER.md"
     power_md.write_text("# My Power\n\nSome content without any frontmatter.\n", encoding="utf-8")
     (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
+    _add_valid_steering(tmp_path)
     result = run_validator(str(tmp_path))
     output = result.stdout + result.stderr
     assert result.returncode != 0, f"validator output was: {output!r}"
-    assert "POWER.md frontmatter" in output, f"validator output was: {output!r}"
+    fails = _failure_lines(output)
+    assert len(fails) == 1, f"expected exactly one FAIL line, got: {fails}"
+    assert "POWER.md frontmatter" in fails[0], f"validator output was: {output!r}"
 
 
 def test_validator_fails_when_frontmatter_missing_required_field(tmp_path):
@@ -94,10 +102,13 @@ def test_validator_fails_when_frontmatter_missing_required_field(tmp_path):
         encoding="utf-8",
     )
     (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
+    _add_valid_steering(tmp_path)
     result = run_validator(str(tmp_path))
     output = result.stdout + result.stderr
     assert result.returncode != 0, f"validator output was: {output!r}"
-    assert "missing field 'keywords'" in output, f"validator output was: {output!r}"
+    fails = _failure_lines(output)
+    assert len(fails) == 1, f"expected exactly one FAIL line, got: {fails}"
+    assert "missing field 'keywords'" in fails[0], f"validator output was: {output!r}"
 
 
 def test_validator_passes_with_complete_powermd(tmp_path):
@@ -188,20 +199,26 @@ def test_validator_accepts_closing_fence_at_eof(tmp_path):
 def test_validator_fails_when_mcp_json_missing(tmp_path):
     """Directory has a valid POWER.md but no mcp.json — validator should fail mentioning mcp.json."""
     (tmp_path / "POWER.md").write_text(VALID_POWER_MD, encoding="utf-8")
+    _add_valid_steering(tmp_path)
     result = run_validator(str(tmp_path))
     output = result.stdout + result.stderr
     assert result.returncode != 0, f"validator output was: {output!r}"
-    assert "mcp.json" in output, f"validator output was: {output!r}"
+    fails = _failure_lines(output)
+    assert len(fails) == 1, f"expected exactly one FAIL line, got: {fails}"
+    assert "mcp.json" in fails[0], f"validator output was: {output!r}"
 
 
 def test_validator_fails_when_mcp_json_invalid_json(tmp_path):
     """mcp.json contains malformed JSON — validator should fail with an invalid JSON message."""
     (tmp_path / "POWER.md").write_text(VALID_POWER_MD, encoding="utf-8")
     (tmp_path / "mcp.json").write_text('{"mcpServers":', encoding="utf-8")
+    _add_valid_steering(tmp_path)
     result = run_validator(str(tmp_path))
     output = result.stdout + result.stderr
     assert result.returncode != 0, f"validator output was: {output!r}"
-    assert "invalid" in output.lower() or "json" in output.lower(), f"validator output was: {output!r}"
+    fails = _failure_lines(output)
+    assert len(fails) == 1, f"expected exactly one FAIL line, got: {fails}"
+    assert "invalid" in fails[0].lower() or "json" in fails[0].lower(), f"validator output was: {output!r}"
 
 
 def test_validator_fails_when_brightdata_server_missing(tmp_path):
@@ -211,10 +228,13 @@ def test_validator_fails_when_brightdata_server_missing(tmp_path):
         '{"mcpServers": {"other": {"url": "https://example.com"}}}\n',
         encoding="utf-8",
     )
+    _add_valid_steering(tmp_path)
     result = run_validator(str(tmp_path))
     output = result.stdout + result.stderr
     assert result.returncode != 0, f"validator output was: {output!r}"
-    assert "brightdata" in output, f"validator output was: {output!r}"
+    fails = _failure_lines(output)
+    assert len(fails) == 1, f"expected exactly one FAIL line, got: {fails}"
+    assert "brightdata" in fails[0], f"validator output was: {output!r}"
 
 
 def test_validator_fails_when_url_missing_token_placeholder(tmp_path):
@@ -224,10 +244,13 @@ def test_validator_fails_when_url_missing_token_placeholder(tmp_path):
         '{"mcpServers": {"brightdata": {"url": "https://mcp.brightdata.com/mcp"}}}\n',
         encoding="utf-8",
     )
+    _add_valid_steering(tmp_path)
     result = run_validator(str(tmp_path))
     output = result.stdout + result.stderr
     assert result.returncode != 0, f"validator output was: {output!r}"
-    assert "BRIGHTDATA_API_KEY" in output, f"validator output was: {output!r}"
+    fails = _failure_lines(output)
+    assert len(fails) == 1, f"expected exactly one FAIL line, got: {fails}"
+    assert "BRIGHTDATA_API_KEY" in fails[0], f"validator output was: {output!r}"
 
 
 def test_validator_fails_when_mcp_servers_is_not_an_object(tmp_path):
@@ -237,10 +260,13 @@ def test_validator_fails_when_mcp_servers_is_not_an_object(tmp_path):
         '{"mcpServers": [{"url": "https://example.com"}]}',
         encoding="utf-8",
     )
+    _add_valid_steering(tmp_path)
     result = run_validator(str(tmp_path))
     output = result.stdout + result.stderr
     assert result.returncode != 0, f"validator output was: {output!r}"
-    assert "mcpServers must be an object" in output, f"validator output was: {output!r}"
+    fails = _failure_lines(output)
+    assert len(fails) == 1, f"expected exactly one FAIL line, got: {fails}"
+    assert "mcpServers must be an object" in fails[0], f"validator output was: {output!r}"
 
 
 def test_validator_fails_when_brightdata_entry_is_not_an_object(tmp_path):
@@ -250,10 +276,13 @@ def test_validator_fails_when_brightdata_entry_is_not_an_object(tmp_path):
         '{"mcpServers": {"brightdata": "https://mcp.brightdata.com/mcp?token=${BRIGHTDATA_API_KEY}"}}',
         encoding="utf-8",
     )
+    _add_valid_steering(tmp_path)
     result = run_validator(str(tmp_path))
     output = result.stdout + result.stderr
     assert result.returncode != 0, f"validator output was: {output!r}"
-    assert "brightdata must be an object" in output, f"validator output was: {output!r}"
+    fails = _failure_lines(output)
+    assert len(fails) == 1, f"expected exactly one FAIL line, got: {fails}"
+    assert "brightdata must be an object" in fails[0], f"validator output was: {output!r}"
 
 
 def test_orchestrator_steering_exists_and_lists_all_phases():
@@ -298,18 +327,7 @@ def test_validator_passes_with_complete_steering(tmp_path):
     """A directory with all five steering files and a properly cross-referencing orchestrator should pass."""
     (tmp_path / "POWER.md").write_text(VALID_POWER_MD, encoding="utf-8")
     (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
-    steering = tmp_path / "steering"
-    steering.mkdir()
-    (steering / "scrape-workflow.md").write_text(
-        "# Workflow\n\nReads phase1-detect-and-plan.md, "
-        "phase2-scraping-playbook.md, phase3-integrate.md, "
-        "phase4-mcp-and-verify.md.\n",
-        encoding="utf-8",
-    )
-    (steering / "phase1-detect-and-plan.md").write_text("# P1", encoding="utf-8")
-    (steering / "phase2-scraping-playbook.md").write_text("# P2", encoding="utf-8")
-    (steering / "phase3-integrate.md").write_text("# P3", encoding="utf-8")
-    (steering / "phase4-mcp-and-verify.md").write_text("# P4", encoding="utf-8")
+    _add_valid_steering(tmp_path)
     result = run_validator(str(tmp_path))
     assert result.returncode == 0, f"unexpected failure: {result.stdout + result.stderr!r}"
     assert "OK" in result.stdout

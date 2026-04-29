@@ -34,7 +34,7 @@ Read **only** the Phase 1 steering file:
 Call action "readSteering" with powerName="brightdata-scrape", steeringFile="phase1-detect-and-plan.md"
 ```
 
-**Do NOT read any other phase file yet.** Phase 1 will summarize a plan and ask the user to confirm. After confirmation, return here.
+**Do NOT read any other phase file yet.** Phase 1 will summarize a plan and ask the user to confirm. After the user confirms, proceed to Step 3 of this file.
 
 ## Step 3: Dispatch subsequent phases
 
@@ -46,6 +46,8 @@ After each phase completes and the user confirms, dispatch the next phase. The p
 4. `phase4-mcp-and-verify.md`
 
 After Phase 4 completes, the workflow is done. Tell the user what was added and where.
+
+(See Step 4 below for the exact transition protocol.)
 
 ## Step 4: Phase transition pattern
 
