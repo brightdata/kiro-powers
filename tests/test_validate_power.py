@@ -532,3 +532,14 @@ def test_template_fastapi_route():
     assert "APIRouter" in src
     assert "scrape_{{TARGET_NAME}}" in src
     assert "@router.get" in src or "@router.post" in src
+
+
+def test_template_anthropic_sdk_ts_tool():
+    """Anthropic SDK TS tool must declare a tool with name, description, input_schema, and a handler."""
+    p = POWER_DIR / "templates" / "tool" / "anthropic-sdk-ts.ts"
+    assert p.is_file(), f"missing {p}"
+    src = p.read_text(encoding="utf-8")
+    assert "name:" in src
+    assert "description:" in src
+    assert "input_schema" in src
+    assert "scrape{{TARGET_NAME}}" in src or "scrape_" in src.lower()
