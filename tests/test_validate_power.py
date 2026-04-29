@@ -517,7 +517,7 @@ def test_template_next_app_router_route():
     assert p.is_file(), f"missing {p}"
     src = p.read_text(encoding="utf-8")
     assert "export async function GET" in src or "export const GET" in src
-    assert "scrape{{TARGET_NAME}}" in src or "scrape" in src.lower()
+    assert "scrape{{TARGET_NAME}}" in src, f"placeholder token 'scrape{{{{TARGET_NAME}}}}' not found in {p}"
     assert "NextResponse" in src or "Response" in src
 
 
@@ -542,7 +542,8 @@ def test_template_anthropic_sdk_ts_tool():
     assert "name:" in src
     assert "description:" in src
     assert "input_schema" in src
-    assert "scrape{{TARGET_NAME}}" in src or "scrape_" in src.lower()
+    assert "scrape{{TARGET_NAME}}" in src, f"placeholder token 'scrape{{{{TARGET_NAME}}}}' not found in {p}"
+    assert "runScrapeTool" in src, f"handler function 'runScrapeTool' not found in {p}"
 
 
 def test_template_anthropic_sdk_py_tool():
@@ -556,6 +557,7 @@ def test_template_anthropic_sdk_py_tool():
     assert "SCRAPE_TOOL" in src or "scrape_tool" in src.lower()
     assert "input_schema" in src
     assert "scrape_{{TARGET_NAME}}" in src
+    assert "run_scrape_tool" in src, f"handler function 'run_scrape_tool' not found in {p}"
 
 
 def test_template_curl_fallback():

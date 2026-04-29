@@ -1374,8 +1374,7 @@ from __future__ import annotations
 
 import os
 import time
-from typing import Any, Iterator, TypedDict
-from urllib.parse import urljoin
+from typing import Iterator, TypedDict
 
 import requests
 from bs4 import BeautifulSoup
