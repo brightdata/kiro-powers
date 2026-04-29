@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship a Kiro power at `powers/brightdata-scrape/` that detects an existing app's stack and adds production-ready Bright Data scraping (module, API route, or agent tool — picked by detection) plus wires the Bright Data MCP server into the project.
+**Goal:** Ship a Kiro power at `brightdata-scrape/` that detects an existing app's stack and adds production-ready Bright Data scraping (module, API route, or agent tool — picked by detection) plus wires the Bright Data MCP server into the project.
 
 **Architecture:** Kiro power = `POWER.md` (frontmatter + onboarding) + `mcp.json` (Bright Data remote MCP) + 5 steering files (orchestrator + 4 phase files). The "code" the power produces lives in template fixture files committed alongside the steering, so the steering can reference them by path and we can verify both directions match. No runtime code — the power's behavior is prompt instructions executed by an AI agent inside Kiro.
 
-**Tech Stack:** Markdown (`POWER.md`, steering), JSON (`mcp.json`), template fixtures in TypeScript and Python, a small `scripts/validate_power.py` (Python 3.11+, stdlib only) for self-checks.
+**Tech Stack:** Markdown (`POWER.md`, steering), JSON (`mcp.json`), template fixtures in TypeScript and Python, a small `scripts/validate_power.py` (Python 3.8+, stdlib only) for self-checks.
 
 **Spec:** `docs/superpowers/specs/2026-04-29-brightdata-scrape-power-design.md`
 
@@ -17,7 +17,7 @@
 Locked-in layout (matches the spec):
 
 ```
-powers/brightdata-scrape/
+brightdata-scrape/
 ├── POWER.md                              # frontmatter + onboarding + orchestrator pointer
 ├── mcp.json                              # Bright Data remote MCP server
 ├── steering/
@@ -57,7 +57,7 @@ powers/brightdata-scrape/
 docs/superpowers/specs/2026-04-29-brightdata-scrape-power-design.md  # already exists
 docs/superpowers/plans/2026-04-29-brightdata-scrape-power.md         # this file
 
-scripts/validate_power.py                 # repo-root validation script (Python 3.11+, stdlib)
+scripts/validate_power.py                 # repo-root validation script (Python 3.8+, stdlib)
 README.md                                 # add brightdata-scrape entry
 ```
 
@@ -84,20 +84,20 @@ This power has no runtime — its "behavior" is markdown that an LLM follows. We
 ## Task 1: Repo bootstrap — create directory structure and validation harness
 
 **Files:**
-- Create: `powers/brightdata-scrape/` (directory)
-- Create: `powers/brightdata-scrape/templates/module/` (directory)
-- Create: `powers/brightdata-scrape/templates/route/` (directory)
-- Create: `powers/brightdata-scrape/templates/tool/` (directory)
-- Create: `powers/brightdata-scrape/templates/fallback/` (directory)
-- Create: `powers/brightdata-scrape/steering/` (directory)
+- Create: `brightdata-scrape/` (directory)
+- Create: `brightdata-scrape/templates/module/` (directory)
+- Create: `brightdata-scrape/templates/route/` (directory)
+- Create: `brightdata-scrape/templates/tool/` (directory)
+- Create: `brightdata-scrape/templates/fallback/` (directory)
+- Create: `brightdata-scrape/steering/` (directory)
 - Create: `scripts/validate_power.py`
 - Create: `tests/test_validate_power.py`
 
 - [ ] **Step 1: Create directories**
 
 ```bash
-mkdir -p powers/brightdata-scrape/templates/{module,route,tool,fallback}
-mkdir -p powers/brightdata-scrape/steering
+mkdir -p brightdata-scrape/templates/{module,route,tool,fallback}
+mkdir -p brightdata-scrape/steering
 mkdir -p scripts tests
 ```
 
@@ -194,7 +194,7 @@ Expected: PASS — validator runs, exits non-zero, mentions POWER.md.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add powers/brightdata-scrape scripts/validate_power.py tests/test_validate_power.py
+git add brightdata-scrape scripts/validate_power.py tests/test_validate_power.py
 git commit -m "feat(power): scaffold brightdata-scrape directory and validation harness"
 ```
 
@@ -203,7 +203,7 @@ git commit -m "feat(power): scaffold brightdata-scrape directory and validation 
 ## Task 2: POWER.md frontmatter
 
 **Files:**
-- Create: `powers/brightdata-scrape/POWER.md`
+- Create: `brightdata-scrape/POWER.md`
 - Modify: `scripts/validate_power.py`
 - Modify: `tests/test_validate_power.py`
 
@@ -226,7 +226,7 @@ def test_power_md_has_required_frontmatter():
 
 - [ ] **Step 2: Write the actual POWER.md**
 
-Create `powers/brightdata-scrape/POWER.md`:
+Create `brightdata-scrape/POWER.md`:
 
 ```markdown
 ---
@@ -346,13 +346,13 @@ Expected: PASS — validator now reports `frontmatter` checks in output.
 
 - [ ] **Step 5: Run the validator directly to confirm POWER.md passes**
 
-Run: `python3 scripts/validate_power.py powers/brightdata-scrape`
-Expected: `OK: powers/brightdata-scrape passed all checks`
+Run: `python3 scripts/validate_power.py brightdata-scrape`
+Expected: `OK: brightdata-scrape passed all checks`
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add powers/brightdata-scrape/POWER.md scripts/validate_power.py tests/test_validate_power.py
+git add brightdata-scrape/POWER.md scripts/validate_power.py tests/test_validate_power.py
 git commit -m "feat(power): POWER.md with frontmatter and onboarding"
 ```
 
@@ -361,7 +361,7 @@ git commit -m "feat(power): POWER.md with frontmatter and onboarding"
 ## Task 3: mcp.json
 
 **Files:**
-- Create: `powers/brightdata-scrape/mcp.json`
+- Create: `brightdata-scrape/mcp.json`
 - Modify: `scripts/validate_power.py`
 - Modify: `tests/test_validate_power.py`
 
@@ -385,7 +385,7 @@ Expected: FAIL — validator doesn't check mcp.json yet.
 
 - [ ] **Step 3: Create mcp.json**
 
-Create `powers/brightdata-scrape/mcp.json`:
+Create `brightdata-scrape/mcp.json`:
 
 ```json
 {
@@ -426,13 +426,13 @@ Modify `scripts/validate_power.py` — add after the frontmatter block (still in
 Run: `python3 -m pytest tests/test_validate_power.py -v`
 Expected: ALL PASS.
 
-Run: `python3 scripts/validate_power.py powers/brightdata-scrape`
-Expected: `OK: powers/brightdata-scrape passed all checks`
+Run: `python3 scripts/validate_power.py brightdata-scrape`
+Expected: `OK: brightdata-scrape passed all checks`
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add powers/brightdata-scrape/mcp.json scripts/validate_power.py tests/test_validate_power.py
+git add brightdata-scrape/mcp.json scripts/validate_power.py tests/test_validate_power.py
 git commit -m "feat(power): mcp.json wiring Bright Data remote MCP server"
 ```
 
@@ -441,7 +441,7 @@ git commit -m "feat(power): mcp.json wiring Bright Data remote MCP server"
 ## Task 4: Steering — orchestrator (`scrape-workflow.md`)
 
 **Files:**
-- Create: `powers/brightdata-scrape/steering/scrape-workflow.md`
+- Create: `brightdata-scrape/steering/scrape-workflow.md`
 - Modify: `scripts/validate_power.py`
 - Modify: `tests/test_validate_power.py`
 
@@ -471,7 +471,7 @@ Expected: FAIL — `scrape-workflow.md` doesn't exist yet.
 
 - [ ] **Step 3: Create the orchestrator file**
 
-Create `powers/brightdata-scrape/steering/scrape-workflow.md`:
+Create `brightdata-scrape/steering/scrape-workflow.md`:
 
 ```markdown
 # brightdata-scrape Workflow
@@ -488,7 +488,7 @@ Use for any scraping or web-data task — the user said something like "scrape X
 2. **One phase steering file at a time.** Read only the next phase's file. Do NOT read ahead.
 3. **Wait for user confirmation between phases.** Each phase ends with a confirmation gate.
 4. **If you lose track, re-read this orchestrator file.** Identify the last completed phase, dispatch the next one.
-5. **Do not improvise the integration code.** Use the templates in `powers/brightdata-scrape/templates/` as canonical references.
+5. **Do not improvise the integration code.** Use the templates in `brightdata-scrape/templates/` as canonical references.
 
 ## Step 1: Validate prerequisites
 
@@ -576,13 +576,13 @@ Modify `scripts/validate_power.py` — add after the mcp.json block:
                     )
 ```
 
-Run: `python3 scripts/validate_power.py powers/brightdata-scrape`
+Run: `python3 scripts/validate_power.py brightdata-scrape`
 Expected: FAIL with messages about missing `phase1-detect-and-plan.md` etc. (intended; Tasks 5–8 add those files). The unit test from Step 1 still passes because it only checks the orchestrator's content.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add powers/brightdata-scrape/steering/scrape-workflow.md scripts/validate_power.py tests/test_validate_power.py
+git add brightdata-scrape/steering/scrape-workflow.md scripts/validate_power.py tests/test_validate_power.py
 git commit -m "feat(power): orchestrator steering file"
 ```
 
@@ -591,7 +591,7 @@ git commit -m "feat(power): orchestrator steering file"
 ## Task 5: Steering — Phase 1 (detect & plan)
 
 **Files:**
-- Create: `powers/brightdata-scrape/steering/phase1-detect-and-plan.md`
+- Create: `brightdata-scrape/steering/phase1-detect-and-plan.md`
 - Modify: `tests/test_validate_power.py`
 
 - [ ] **Step 1: Write the failing test**
@@ -618,7 +618,7 @@ Expected: FAIL — file doesn't exist.
 
 - [ ] **Step 3: Create the Phase 1 steering file**
 
-Create `powers/brightdata-scrape/steering/phase1-detect-and-plan.md`:
+Create `brightdata-scrape/steering/phase1-detect-and-plan.md`:
 
 ```markdown
 # Phase 1: Detect & Plan
@@ -758,13 +758,13 @@ Expected: PASS.
 
 - [ ] **Step 5: Run the validator**
 
-Run: `python3 scripts/validate_power.py powers/brightdata-scrape`
+Run: `python3 scripts/validate_power.py brightdata-scrape`
 Expected: still failing on phase 2/3/4 files, but phase 1 file now exists.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add powers/brightdata-scrape/steering/phase1-detect-and-plan.md tests/test_validate_power.py
+git add brightdata-scrape/steering/phase1-detect-and-plan.md tests/test_validate_power.py
 git commit -m "feat(power): Phase 1 steering — detect stack and plan integration"
 ```
 
@@ -773,7 +773,7 @@ git commit -m "feat(power): Phase 1 steering — detect stack and plan integrati
 ## Task 6: Steering — Phase 2 (scraping playbook, condensed)
 
 **Files:**
-- Create: `powers/brightdata-scrape/steering/phase2-scraping-playbook.md`
+- Create: `brightdata-scrape/steering/phase2-scraping-playbook.md`
 - Modify: `tests/test_validate_power.py`
 
 - [ ] **Step 1: Write the failing test**
@@ -804,7 +804,7 @@ Expected: FAIL.
 
 - [ ] **Step 3: Create the Phase 2 steering file**
 
-Create `powers/brightdata-scrape/steering/phase2-scraping-playbook.md`:
+Create `brightdata-scrape/steering/phase2-scraping-playbook.md`:
 
 ```markdown
 # Phase 2: Scraping Playbook (Condensed)
@@ -900,7 +900,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add powers/brightdata-scrape/steering/phase2-scraping-playbook.md tests/test_validate_power.py
+git add brightdata-scrape/steering/phase2-scraping-playbook.md tests/test_validate_power.py
 git commit -m "feat(power): Phase 2 steering — condensed scraping playbook"
 ```
 
@@ -909,7 +909,7 @@ git commit -m "feat(power): Phase 2 steering — condensed scraping playbook"
 ## Task 7: Steering — Phase 3 (integrate)
 
 **Files:**
-- Create: `powers/brightdata-scrape/steering/phase3-integrate.md`
+- Create: `brightdata-scrape/steering/phase3-integrate.md`
 - Modify: `tests/test_validate_power.py`
 
 - [ ] **Step 1: Write the failing test**
@@ -939,7 +939,7 @@ Expected: FAIL.
 
 - [ ] **Step 3: Create the Phase 3 steering file**
 
-Create `powers/brightdata-scrape/steering/phase3-integrate.md`:
+Create `brightdata-scrape/steering/phase3-integrate.md`:
 
 ```markdown
 # Phase 3: Integrate
@@ -952,8 +952,8 @@ Use the Phase 1 decision record's `pattern` and `framework` fields. Look up the 
 
 | Pattern | Framework | Template path |
 |---------|-----------|---------------|
-| `module` | TypeScript | `powers/brightdata-scrape/templates/module/ts-cheerio.ts` (if user has cheerio) or `ts-fetch.ts` (otherwise) |
-| `module` | Python | `powers/brightdata-scrape/templates/module/py-bs4.py` (if bs4 acceptable) or `py-stdlib.py` (otherwise) |
+| `module` | TypeScript | `brightdata-scrape/templates/module/ts-cheerio.ts` (if user has cheerio) or `ts-fetch.ts` (otherwise) |
+| `module` | Python | `brightdata-scrape/templates/module/py-bs4.py` (if bs4 acceptable) or `py-stdlib.py` (otherwise) |
 | `route` | Next.js App Router | `templates/route/next-app-router.ts` |
 | `route` | Next.js Pages Router | `templates/route/next-pages-router.ts` |
 | `route` | Express | `templates/route/express.ts` |
@@ -1077,7 +1077,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add powers/brightdata-scrape/steering/phase3-integrate.md tests/test_validate_power.py
+git add brightdata-scrape/steering/phase3-integrate.md tests/test_validate_power.py
 git commit -m "feat(power): Phase 3 steering — integrate templates into the user's project"
 ```
 
@@ -1086,7 +1086,7 @@ git commit -m "feat(power): Phase 3 steering — integrate templates into the us
 ## Task 8: Steering — Phase 4 (MCP wiring + verify)
 
 **Files:**
-- Create: `powers/brightdata-scrape/steering/phase4-mcp-and-verify.md`
+- Create: `brightdata-scrape/steering/phase4-mcp-and-verify.md`
 - Modify: `tests/test_validate_power.py`
 
 - [ ] **Step 1: Write the failing test**
@@ -1119,7 +1119,7 @@ Expected: FAIL.
 
 - [ ] **Step 3: Create the Phase 4 steering file**
 
-Create `powers/brightdata-scrape/steering/phase4-mcp-and-verify.md`:
+Create `brightdata-scrape/steering/phase4-mcp-and-verify.md`:
 
 ```markdown
 # Phase 4: MCP Wiring & Smoke Test
@@ -1242,13 +1242,13 @@ Workflow complete. Return to the orchestrator with no further action.
 Run: `python3 -m pytest tests/test_validate_power.py -v`
 Expected: ALL PASS.
 
-Run: `python3 scripts/validate_power.py powers/brightdata-scrape`
-Expected: `OK: powers/brightdata-scrape passed all checks`
+Run: `python3 scripts/validate_power.py brightdata-scrape`
+Expected: `OK: brightdata-scrape passed all checks`
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add powers/brightdata-scrape/steering/phase4-mcp-and-verify.md tests/test_validate_power.py
+git add brightdata-scrape/steering/phase4-mcp-and-verify.md tests/test_validate_power.py
 git commit -m "feat(power): Phase 4 steering — MCP wiring and smoke test"
 ```
 
@@ -1308,7 +1308,7 @@ Expected: PASS — output includes `WARN: missing template ...`.
 
 - [ ] **Step 5: Run the validator and observe the warning list**
 
-Run: `python3 scripts/validate_power.py powers/brightdata-scrape`
+Run: `python3 scripts/validate_power.py brightdata-scrape`
 Expected: prints multiple `WARN: missing template ...` lines (because no template files exist yet), but exits 0 because they're warnings.
 
 - [ ] **Step 6: Commit**
@@ -1323,7 +1323,7 @@ git commit -m "feat(validator): warn on missing templates referenced by phase3"
 ## Task 10: Template — Python module with bs4 (`py-bs4.py`)
 
 **Files:**
-- Create: `powers/brightdata-scrape/templates/module/py-bs4.py`
+- Create: `brightdata-scrape/templates/module/py-bs4.py`
 - Modify: `tests/test_validate_power.py`
 
 - [ ] **Step 1: Write the failing test**
@@ -1359,7 +1359,7 @@ Expected: FAIL — file doesn't exist.
 
 - [ ] **Step 3: Create the template**
 
-Create `powers/brightdata-scrape/templates/module/py-bs4.py`:
+Create `brightdata-scrape/templates/module/py-bs4.py`:
 
 ```python
 """Bright Data scraper for {{TARGET_URL}}.
@@ -1472,13 +1472,13 @@ Expected: PASS.
 
 - [ ] **Step 5: Run the validator (one less WARN now)**
 
-Run: `python3 scripts/validate_power.py powers/brightdata-scrape`
+Run: `python3 scripts/validate_power.py brightdata-scrape`
 Expected: OK with one fewer `WARN: missing template`.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add powers/brightdata-scrape/templates/module/py-bs4.py tests/test_validate_power.py
+git add brightdata-scrape/templates/module/py-bs4.py tests/test_validate_power.py
 git commit -m "feat(power): Python module template (bs4)"
 ```
 
@@ -1487,7 +1487,7 @@ git commit -m "feat(power): Python module template (bs4)"
 ## Task 11: Template — TypeScript module with cheerio (`ts-cheerio.ts`)
 
 **Files:**
-- Create: `powers/brightdata-scrape/templates/module/ts-cheerio.ts`
+- Create: `brightdata-scrape/templates/module/ts-cheerio.ts`
 - Modify: `tests/test_validate_power.py`
 
 - [ ] **Step 1: Write the failing test**
@@ -1516,7 +1516,7 @@ Expected: FAIL.
 
 - [ ] **Step 3: Create the template**
 
-Create `powers/brightdata-scrape/templates/module/ts-cheerio.ts`:
+Create `brightdata-scrape/templates/module/ts-cheerio.ts`:
 
 ```typescript
 /**
@@ -1609,7 +1609,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add powers/brightdata-scrape/templates/module/ts-cheerio.ts tests/test_validate_power.py
+git add brightdata-scrape/templates/module/ts-cheerio.ts tests/test_validate_power.py
 git commit -m "feat(power): TypeScript module template (cheerio)"
 ```
 
@@ -1618,7 +1618,7 @@ git commit -m "feat(power): TypeScript module template (cheerio)"
 ## Task 12: Template — Next.js App Router route (`next-app-router.ts`)
 
 **Files:**
-- Create: `powers/brightdata-scrape/templates/route/next-app-router.ts`
+- Create: `brightdata-scrape/templates/route/next-app-router.ts`
 - Modify: `tests/test_validate_power.py`
 
 - [ ] **Step 1: Write the failing test**
@@ -1643,7 +1643,7 @@ Expected: FAIL.
 
 - [ ] **Step 3: Create the template**
 
-Create `powers/brightdata-scrape/templates/route/next-app-router.ts`:
+Create `brightdata-scrape/templates/route/next-app-router.ts`:
 
 ```typescript
 /**
@@ -1679,7 +1679,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add powers/brightdata-scrape/templates/route/next-app-router.ts tests/test_validate_power.py
+git add brightdata-scrape/templates/route/next-app-router.ts tests/test_validate_power.py
 git commit -m "feat(power): Next.js App Router route template"
 ```
 
@@ -1688,7 +1688,7 @@ git commit -m "feat(power): Next.js App Router route template"
 ## Task 13: Template — FastAPI route (`fastapi.py`)
 
 **Files:**
-- Create: `powers/brightdata-scrape/templates/route/fastapi.py`
+- Create: `brightdata-scrape/templates/route/fastapi.py`
 - Modify: `tests/test_validate_power.py`
 
 - [ ] **Step 1: Write the failing test**
@@ -1716,7 +1716,7 @@ Expected: FAIL.
 
 - [ ] **Step 3: Create the template**
 
-Create `powers/brightdata-scrape/templates/route/fastapi.py`:
+Create `brightdata-scrape/templates/route/fastapi.py`:
 
 ```python
 """FastAPI route — GET /api/scrape
@@ -1755,7 +1755,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add powers/brightdata-scrape/templates/route/fastapi.py tests/test_validate_power.py
+git add brightdata-scrape/templates/route/fastapi.py tests/test_validate_power.py
 git commit -m "feat(power): FastAPI route template"
 ```
 
@@ -1764,7 +1764,7 @@ git commit -m "feat(power): FastAPI route template"
 ## Task 14: Template — Anthropic SDK tool, TypeScript (`anthropic-sdk-ts.ts`)
 
 **Files:**
-- Create: `powers/brightdata-scrape/templates/tool/anthropic-sdk-ts.ts`
+- Create: `brightdata-scrape/templates/tool/anthropic-sdk-ts.ts`
 - Modify: `tests/test_validate_power.py`
 
 - [ ] **Step 1: Write the failing test**
@@ -1790,7 +1790,7 @@ Expected: FAIL.
 
 - [ ] **Step 3: Create the template**
 
-Create `powers/brightdata-scrape/templates/tool/anthropic-sdk-ts.ts`:
+Create `brightdata-scrape/templates/tool/anthropic-sdk-ts.ts`:
 
 ```typescript
 /**
@@ -1846,7 +1846,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add powers/brightdata-scrape/templates/tool/anthropic-sdk-ts.ts tests/test_validate_power.py
+git add brightdata-scrape/templates/tool/anthropic-sdk-ts.ts tests/test_validate_power.py
 git commit -m "feat(power): Anthropic SDK TS tool template"
 ```
 
@@ -1855,7 +1855,7 @@ git commit -m "feat(power): Anthropic SDK TS tool template"
 ## Task 15: Template — Anthropic SDK tool, Python (`anthropic-sdk-py.py`)
 
 **Files:**
-- Create: `powers/brightdata-scrape/templates/tool/anthropic-sdk-py.py`
+- Create: `brightdata-scrape/templates/tool/anthropic-sdk-py.py`
 - Modify: `tests/test_validate_power.py`
 
 - [ ] **Step 1: Write the failing test**
@@ -1883,7 +1883,7 @@ Expected: FAIL.
 
 - [ ] **Step 3: Create the template**
 
-Create `powers/brightdata-scrape/templates/tool/anthropic-sdk-py.py`:
+Create `brightdata-scrape/templates/tool/anthropic-sdk-py.py`:
 
 ```python
 """Anthropic SDK tool definition for scraping {{TARGET_URL}}.
@@ -1945,7 +1945,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add powers/brightdata-scrape/templates/tool/anthropic-sdk-py.py tests/test_validate_power.py
+git add brightdata-scrape/templates/tool/anthropic-sdk-py.py tests/test_validate_power.py
 git commit -m "feat(power): Anthropic SDK Python tool template"
 ```
 
@@ -1954,7 +1954,7 @@ git commit -m "feat(power): Anthropic SDK Python tool template"
 ## Task 16: Template — `curl.sh` fallback for other languages
 
 **Files:**
-- Create: `powers/brightdata-scrape/templates/fallback/curl.sh`
+- Create: `brightdata-scrape/templates/fallback/curl.sh`
 - Modify: `tests/test_validate_power.py`
 
 - [ ] **Step 1: Write the failing test**
@@ -1981,7 +1981,7 @@ Expected: FAIL.
 
 - [ ] **Step 3: Create the template**
 
-Create `powers/brightdata-scrape/templates/fallback/curl.sh`:
+Create `brightdata-scrape/templates/fallback/curl.sh`:
 
 ```bash
 #!/usr/bin/env bash
@@ -2021,7 +2021,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add powers/brightdata-scrape/templates/fallback/curl.sh tests/test_validate_power.py
+git add brightdata-scrape/templates/fallback/curl.sh tests/test_validate_power.py
 git commit -m "feat(power): generic curl fallback template"
 ```
 
@@ -2113,8 +2113,8 @@ Modify `scripts/validate_power.py` — replace the template-references block wit
 Run: `python3 -m pytest tests/test_validate_power.py -v`
 Expected: ALL PASS.
 
-Run: `python3 scripts/validate_power.py powers/brightdata-scrape`
-Expected: `OK: powers/brightdata-scrape passed all checks` (no v1 FAILs; v1.1 templates still WARN).
+Run: `python3 scripts/validate_power.py brightdata-scrape`
+Expected: `OK: brightdata-scrape passed all checks` (no v1 FAILs; v1.1 templates still WARN).
 
 - [ ] **Step 5: Commit**
 
@@ -2125,38 +2125,60 @@ git commit -m "feat(validator): enforce v1 required templates"
 
 ---
 
-## Task 18: Update `powers/README.md` to list the new power
+## Task 18: Write the outer repo README
 
 **Files:**
-- Modify: `powers/README.md`
+- Create: `README.md` (at repo root)
 
-- [ ] **Step 1: Read the existing README structure**
+The outer repo doesn't have a top-level README yet. Add one that explains what this workspace contains and how to use the power.
 
-Inspect `powers/README.md` to find the alphabetical insertion point and copy the existing entry format (e.g., the `aws-mcp` or `postman` entry).
+- [ ] **Step 1: Create README.md at the repo root**
 
-- [ ] **Step 2: Insert the brightdata-scrape entry**
+Content:
 
-Add this block in alphabetical order (between `aws-transform` and `checkout`, or wherever `b*` would land):
+````markdown
+# brightdata-powers
 
-```markdown
-### brightdata-scrape
-**Add web scraping to any app with Bright Data** — Detects your project's stack (any language, with first-class TypeScript and Python support) and adds production-ready scraping in the right shape — a reusable module, an API route, or an agent tool. Wires the Bright Data MCP server into the project so any AI agent that runs against the project gains live web tools (search, scrape, structured data from 40+ platforms).
+A Bright Data Kiro power for adding web scraping to any application.
 
-**MCP Servers:** brightdata (`https://mcp.brightdata.com/mcp`)
+## What's in this repo
 
----
-```
+- **`brightdata-scrape/`** — the Kiro power itself (`POWER.md`, `mcp.json`, steering files, code templates). Install as a Kiro power from this directory, or copy `brightdata-scrape/` into the upstream `kirodotdev/powers` collection to contribute.
+- **`powers/`** — a clone of [`kirodotdev/powers`](https://github.com/kirodotdev/powers) used as inspiration. Not part of this repo's tree (gitignored).
+- **`docs/superpowers/`** — design spec and implementation plan for `brightdata-scrape`.
+- **`scripts/validate_power.py`** — CLI to validate the power's structure.
+- **`tests/test_validate_power.py`** — pytest suite for the validator.
 
-- [ ] **Step 3: Verify alphabetical order and formatting**
+## What `brightdata-scrape` does
 
-Run: `grep -n "^### " powers/README.md | head -30`
-Expected: `brightdata-scrape` appears in alphabetical position; surrounding entries unchanged.
+It's a Kiro power that detects your project's stack and adds production-ready Bright Data scraping in the right shape — a reusable module, an API route, or an agent tool — backed by Bright Data's [Web Unlocker](https://brightdata.com/products/web-unlocker), [SERP API](https://brightdata.com/products/serp-api), [Web Data APIs](https://brightdata.com/products/web-scraper), and [Browser API](https://brightdata.com/products/scraping-browser). It also wires the [Bright Data MCP server](https://mcp.brightdata.com) into your project so any AI agent that runs against the project (Claude Code, Cursor, Cline, Kiro itself) gains live web tools.
 
-- [ ] **Step 4: Commit**
+## Quick start
+
+1. Get a [Bright Data API token](https://brightdata.com/cp/setting/users) (free 5,000 requests/month).
+2. Set it: `export BRIGHTDATA_API_KEY=<your-token>`.
+3. In Kiro, use **Add power from local path** and point it at `brightdata-scrape/`.
+4. Tell Kiro: *"add a scraper for X"* / *"give my agent web search"* / *"extract product prices from amazon.com"*.
+
+## Validating the power
 
 ```bash
-git add powers/README.md
-git commit -m "docs: add brightdata-scrape to powers README"
+python3 scripts/validate_power.py brightdata-scrape
+python3 -m pytest tests/test_validate_power.py -v
+```
+
+## See also
+
+- Spec: [`docs/superpowers/specs/2026-04-29-brightdata-scrape-power-design.md`](docs/superpowers/specs/2026-04-29-brightdata-scrape-power-design.md)
+- Implementation plan: [`docs/superpowers/plans/2026-04-29-brightdata-scrape-power.md`](docs/superpowers/plans/2026-04-29-brightdata-scrape-power.md)
+- Bright Data docs: https://docs.brightdata.com
+````
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add README.md
+git commit -m "docs: top-level README for brightdata-powers workspace"
 ```
 
 ---
@@ -2216,7 +2238,7 @@ rm -rf /tmp/brightdata-scrape-test
 
 ```bash
 # only if you edited steering files for clarity during the walkthrough
-git add powers/brightdata-scrape/steering/
+git add brightdata-scrape/steering/
 git commit -m "docs(power): smoke-test polish — clarify steering wording"
 # otherwise, no commit needed for this task
 ```
@@ -2233,9 +2255,9 @@ Templates added in one batch — they all follow the same shape. Each gets a sma
 
 - [ ] **Step 1: Module variants — `ts-fetch.ts` and `py-stdlib.py`**
 
-Create `powers/brightdata-scrape/templates/module/ts-fetch.ts` (same shape as `ts-cheerio.ts` but parser uses regex / `HTMLRewriter` and has no `import * as cheerio`).
+Create `brightdata-scrape/templates/module/ts-fetch.ts` (same shape as `ts-cheerio.ts` but parser uses regex / `HTMLRewriter` and has no `import * as cheerio`).
 
-Create `powers/brightdata-scrape/templates/module/py-stdlib.py` (same shape as `py-bs4.py` but parser uses `html.parser` from stdlib instead of bs4).
+Create `brightdata-scrape/templates/module/py-stdlib.py` (same shape as `py-bs4.py` but parser uses `html.parser` from stdlib instead of bs4).
 
 Append parsability tests to `tests/test_validate_power.py`:
 
@@ -2265,13 +2287,13 @@ Run tests: `python3 -m pytest tests/test_validate_power.py -v` → PASS.
 Commit:
 
 ```bash
-git add powers/brightdata-scrape/templates/module/ts-fetch.ts powers/brightdata-scrape/templates/module/py-stdlib.py tests/test_validate_power.py
+git add brightdata-scrape/templates/module/ts-fetch.ts brightdata-scrape/templates/module/py-stdlib.py tests/test_validate_power.py
 git commit -m "feat(power): module templates — ts-fetch and py-stdlib"
 ```
 
 - [ ] **Step 2: Route variants — Next.js Pages Router, Express, Fastify, Hono, Koa, Flask, Django**
 
-Create each file under `powers/brightdata-scrape/templates/route/` following the same conventions as `next-app-router.ts` and `fastapi.py` (route imports the module, calls scraper, returns JSON; surfaces errors as 500s).
+Create each file under `brightdata-scrape/templates/route/` following the same conventions as `next-app-router.ts` and `fastapi.py` (route imports the module, calls scraper, returns JSON; surfaces errors as 500s).
 
 Filenames:
 - `next-pages-router.ts`
@@ -2287,23 +2309,23 @@ Append a parsability test for each (mirror Task 12/13 pattern). For TS files, ju
 Run tests, then commit per family:
 
 ```bash
-git add powers/brightdata-scrape/templates/route/next-pages-router.ts \
-        powers/brightdata-scrape/templates/route/express.ts \
-        powers/brightdata-scrape/templates/route/fastify.ts \
-        powers/brightdata-scrape/templates/route/hono.ts \
-        powers/brightdata-scrape/templates/route/koa.ts \
+git add brightdata-scrape/templates/route/next-pages-router.ts \
+        brightdata-scrape/templates/route/express.ts \
+        brightdata-scrape/templates/route/fastify.ts \
+        brightdata-scrape/templates/route/hono.ts \
+        brightdata-scrape/templates/route/koa.ts \
         tests/test_validate_power.py
 git commit -m "feat(power): TS web framework route templates"
 
-git add powers/brightdata-scrape/templates/route/flask.py \
-        powers/brightdata-scrape/templates/route/django.py \
+git add brightdata-scrape/templates/route/flask.py \
+        brightdata-scrape/templates/route/django.py \
         tests/test_validate_power.py
 git commit -m "feat(power): Python web framework route templates"
 ```
 
 - [ ] **Step 3: Tool variants — LangChain (TS+Py), OpenAI (TS+Py), Mastra, Vercel AI SDK**
 
-Create each under `powers/brightdata-scrape/templates/tool/`:
+Create each under `brightdata-scrape/templates/tool/`:
 - `langchain-ts.ts`
 - `langchain-py.py`
 - `openai-ts.ts`
@@ -2316,7 +2338,7 @@ Each follows the same shape as `anthropic-sdk-ts.ts` / `anthropic-sdk-py.py` —
 Append parsability tests, run, commit:
 
 ```bash
-git add powers/brightdata-scrape/templates/tool/ tests/test_validate_power.py
+git add brightdata-scrape/templates/tool/ tests/test_validate_power.py
 git commit -m "feat(power): remaining agent-tool templates (LangChain, OpenAI, Mastra, Vercel AI)"
 ```
 

@@ -26,7 +26,7 @@ The power must work on greenfield workspaces too, but is optimized for the "I ha
 ## Architecture
 
 ```
-powers/brightdata-scrape/
+brightdata-scrape/
 ├── POWER.md                          # frontmatter + onboarding + orchestrator pointer
 ├── mcp.json                          # Bright Data remote MCP server
 └── steering/

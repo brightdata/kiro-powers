@@ -7,7 +7,7 @@ import subprocess
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-POWER_DIR = REPO_ROOT / "powers" / "brightdata-scrape"
+POWER_DIR = REPO_ROOT / "brightdata-scrape"
 
 
 def run_validator(*args: str) -> subprocess.CompletedProcess:
@@ -18,8 +18,8 @@ def run_validator(*args: str) -> subprocess.CompletedProcess:
     )
 
 
-def test_validator_runs_and_reports_missing_power_md():
-    """With an empty power dir, validator should fail and mention POWER.md."""
-    result = run_validator(str(POWER_DIR))
-    assert result.returncode != 0, f"expected failure, got: {result.stdout}"
+def test_validator_runs_and_reports_missing_power_md(tmp_path):
+    """With a directory that has no POWER.md, validator should fail and mention POWER.md."""
+    result = run_validator(str(tmp_path))
+    assert result.returncode != 0
     assert "POWER.md" in (result.stdout + result.stderr)

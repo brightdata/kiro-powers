@@ -1,8 +1,6 @@
-# The upstream powers repo has its own git history inside powers/.
-# We track the existing powers as plain files, not via submodule, so
-# ignore its inner .git directory.
-powers/.git/
-powers/**/.git/
+# powers/ is a clone of github.com/kirodotdev/powers used as inspiration.
+# It is not part of this repo's tree.
+powers/
 
 # Python
 __pycache__/
