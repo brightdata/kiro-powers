@@ -474,3 +474,24 @@ def test_validator_only_recognizes_known_template_subdirs(tmp_path):
     assert "WARN: missing template templates/something_else/foo.py" not in output, (
         f"should not warn for non-canonical subdir; output: {output!r}"
     )
+
+
+def test_template_py_bs4_is_valid_python():
+    """The Python module template must parse as valid Python (placeholders and all)."""
+    import ast
+    p = POWER_DIR / "templates" / "module" / "py-bs4.py"
+    assert p.is_file(), f"missing {p}"
+    src = p.read_text(encoding="utf-8")
+    # Replace template placeholders with valid Python literals so ast.parse succeeds
+    src_filled = (src
+        .replace("{{TARGET_NAME}}", "competitor_prices")
+        .replace("{{TARGET_URL}}", "https://example.com")
+        .replace("{{CONCURRENCY}}", "20")
+    )
+    ast.parse(src_filled)  # raises SyntaxError on failure
+
+    # Required surface-level checks
+    assert "BRIGHTDATA_API_KEY" in src
+    assert "BRIGHTDATA_UNLOCKER_ZONE" in src
+    assert "https://api.brightdata.com/request" in src
+    assert "def scrape_" in src
