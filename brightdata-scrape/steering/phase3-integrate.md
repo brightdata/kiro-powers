@@ -33,6 +33,15 @@ Use the Phase 1 decision record's `pattern` and `framework` fields. Look up the 
 
 > "I don't have a canonical template for `<framework>` yet — I'm using the `<closest>` template as a starting point and adapting it. You may need to adjust imports/syntax."
 
+### Routes and tools also need a module template
+
+The route and tool patterns import the scraper from a sibling module file. So when the pattern is `route` or `tool`, you must also pick a **module** template:
+
+- TypeScript projects: `templates/module/ts-cheerio.ts` if the project already depends on `cheerio`; otherwise `templates/module/ts-fetch.ts` (no parser dep).
+- Python projects: `templates/module/py-bs4.py` if `beautifulsoup4` is acceptable to add (or already a dep); otherwise `templates/module/py-stdlib.py` (stdlib only).
+
+In other words: route and tool patterns generate **two** files — the route/tool wrapper and the module it imports.
+
 ## Step 2: Fill the template
 
 Replace these placeholders in the template with values from the decision records:
