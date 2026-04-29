@@ -73,6 +73,32 @@ def main(argv: list[str]) -> int:
                         "mcp.json: brightdata.url must reference ${BRIGHTDATA_API_KEY}"
                     )
 
+    steering_dir = power_dir / "steering"
+    if not steering_dir.is_dir():
+        failures.append("steering/: missing required directory")
+    else:
+        required_steering = [
+            "scrape-workflow.md",
+            "phase1-detect-and-plan.md",
+            "phase2-scraping-playbook.md",
+            "phase3-integrate.md",
+            "phase4-mcp-and-verify.md",
+        ]
+        present = {p.name for p in steering_dir.iterdir() if p.is_file()}
+        for name in required_steering:
+            if name not in present:
+                failures.append(f"steering/{name}: missing required file")
+
+        # Orchestrator must reference each phase file by exact filename
+        wf = steering_dir / "scrape-workflow.md"
+        if wf.is_file():
+            wf_text = wf.read_text(encoding="utf-8")
+            for phase in required_steering[1:]:  # skip self
+                if phase not in wf_text:
+                    failures.append(
+                        f"scrape-workflow.md: must reference '{phase}' by exact filename"
+                    )
+
     if failures:
         for f in failures:
             fail(f)

@@ -32,6 +32,23 @@ VALID_MCP_JSON = (
     '}\n'
 )
 
+VALID_STEERING_WORKFLOW = (
+    "# Workflow\n\nReads phase1-detect-and-plan.md, "
+    "phase2-scraping-playbook.md, phase3-integrate.md, "
+    "phase4-mcp-and-verify.md.\n"
+)
+
+
+def _add_valid_steering(base: "Path") -> None:
+    """Create a minimal valid steering/ directory under *base*."""
+    steering = base / "steering"
+    steering.mkdir(exist_ok=True)
+    (steering / "scrape-workflow.md").write_text(VALID_STEERING_WORKFLOW, encoding="utf-8")
+    (steering / "phase1-detect-and-plan.md").write_text("# P1", encoding="utf-8")
+    (steering / "phase2-scraping-playbook.md").write_text("# P2", encoding="utf-8")
+    (steering / "phase3-integrate.md").write_text("# P3", encoding="utf-8")
+    (steering / "phase4-mcp-and-verify.md").write_text("# P4", encoding="utf-8")
+
 
 def run_validator(*args: str) -> subprocess.CompletedProcess:
     return subprocess.run(
@@ -99,6 +116,7 @@ def test_validator_passes_with_complete_powermd(tmp_path):
         encoding="utf-8",
     )
     (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
+    _add_valid_steering(tmp_path)
     result = run_validator(str(tmp_path))
     output = result.stdout + result.stderr
     assert result.returncode == 0, f"validator output was: {output!r}"
@@ -121,6 +139,7 @@ def test_validator_accepts_crlf_line_endings(tmp_path):
         encoding="utf-8",
     )
     (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
+    _add_valid_steering(tmp_path)
     result = run_validator(str(tmp_path))
     assert result.returncode == 0, f"unexpected failure: {result.stdout + result.stderr!r}"
 
@@ -142,6 +161,7 @@ def test_validator_accepts_utf8_bom(tmp_path):
         encoding="utf-8",
     )
     (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
+    _add_valid_steering(tmp_path)
     result = run_validator(str(tmp_path))
     assert result.returncode == 0, f"unexpected failure: {result.stdout + result.stderr!r}"
 
@@ -160,6 +180,7 @@ def test_validator_accepts_closing_fence_at_eof(tmp_path):
         encoding="utf-8",
     )
     (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
+    _add_valid_steering(tmp_path)
     result = run_validator(str(tmp_path))
     assert result.returncode == 0, f"unexpected failure: {result.stdout + result.stderr!r}"
 
@@ -233,3 +254,62 @@ def test_validator_fails_when_brightdata_entry_is_not_an_object(tmp_path):
     output = result.stdout + result.stderr
     assert result.returncode != 0, f"validator output was: {output!r}"
     assert "brightdata must be an object" in output, f"validator output was: {output!r}"
+
+
+def test_orchestrator_steering_exists_and_lists_all_phases():
+    """scrape-workflow.md must reference all four phase files by exact filename."""
+    wf_path = POWER_DIR / "steering" / "scrape-workflow.md"
+    assert wf_path.is_file(), f"missing {wf_path}"
+    text = wf_path.read_text(encoding="utf-8")
+    for phase in [
+        "phase1-detect-and-plan.md",
+        "phase2-scraping-playbook.md",
+        "phase3-integrate.md",
+        "phase4-mcp-and-verify.md",
+    ]:
+        assert phase in text, f"orchestrator missing reference to {phase}"
+
+
+def test_validator_fails_when_orchestrator_missing_phase_reference(tmp_path):
+    """scrape-workflow.md that doesn't mention every phase file should fail validation."""
+    (tmp_path / "POWER.md").write_text(VALID_POWER_MD, encoding="utf-8")
+    (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
+    steering = tmp_path / "steering"
+    steering.mkdir()
+    # Orchestrator references only 3 of the 4 phases (missing phase4)
+    (steering / "scrape-workflow.md").write_text(
+        "# Workflow\n\nRead phase1-detect-and-plan.md, then "
+        "phase2-scraping-playbook.md, then phase3-integrate.md.\n",
+        encoding="utf-8",
+    )
+    # All four phase files exist (so the missing-file check doesn't fire)
+    (steering / "phase1-detect-and-plan.md").write_text("# P1", encoding="utf-8")
+    (steering / "phase2-scraping-playbook.md").write_text("# P2", encoding="utf-8")
+    (steering / "phase3-integrate.md").write_text("# P3", encoding="utf-8")
+    (steering / "phase4-mcp-and-verify.md").write_text("# P4", encoding="utf-8")
+    result = run_validator(str(tmp_path))
+    output = result.stdout + result.stderr
+    assert result.returncode != 0, f"validator output was: {output!r}"
+    assert "phase4-mcp-and-verify.md" in output, f"validator output was: {output!r}"
+    assert "must reference" in output, f"validator output was: {output!r}"
+
+
+def test_validator_passes_with_complete_steering(tmp_path):
+    """A directory with all five steering files and a properly cross-referencing orchestrator should pass."""
+    (tmp_path / "POWER.md").write_text(VALID_POWER_MD, encoding="utf-8")
+    (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
+    steering = tmp_path / "steering"
+    steering.mkdir()
+    (steering / "scrape-workflow.md").write_text(
+        "# Workflow\n\nReads phase1-detect-and-plan.md, "
+        "phase2-scraping-playbook.md, phase3-integrate.md, "
+        "phase4-mcp-and-verify.md.\n",
+        encoding="utf-8",
+    )
+    (steering / "phase1-detect-and-plan.md").write_text("# P1", encoding="utf-8")
+    (steering / "phase2-scraping-playbook.md").write_text("# P2", encoding="utf-8")
+    (steering / "phase3-integrate.md").write_text("# P3", encoding="utf-8")
+    (steering / "phase4-mcp-and-verify.md").write_text("# P4", encoding="utf-8")
+    result = run_validator(str(tmp_path))
+    assert result.returncode == 0, f"unexpected failure: {result.stdout + result.stderr!r}"
+    assert "OK" in result.stdout
