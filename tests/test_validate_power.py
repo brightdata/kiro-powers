@@ -556,3 +556,15 @@ def test_template_anthropic_sdk_py_tool():
     assert "SCRAPE_TOOL" in src or "scrape_tool" in src.lower()
     assert "input_schema" in src
     assert "scrape_{{TARGET_NAME}}" in src
+
+
+def test_template_curl_fallback():
+    """Fallback curl template must show the Web Unlocker request and document adaptation."""
+    p = POWER_DIR / "templates" / "fallback" / "curl.sh"
+    assert p.is_file(), f"missing {p}"
+    src = p.read_text(encoding="utf-8")
+    assert "BRIGHTDATA_API_KEY" in src
+    assert "https://api.brightdata.com/request" in src
+    assert "Authorization: Bearer" in src
+    # Must include guidance for adapting to another language
+    assert "adapt" in src.lower() or "translate" in src.lower()
