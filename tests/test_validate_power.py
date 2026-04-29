@@ -42,10 +42,12 @@ def run_validator(*args: str) -> subprocess.CompletedProcess:
 
 
 def test_validator_runs_and_reports_missing_power_md(tmp_path):
-    """With a directory that has no POWER.md, validator should fail and mention POWER.md."""
+    """With a directory that has mcp.json but no POWER.md, only the missing-file rule for POWER.md should fire."""
+    (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
     result = run_validator(str(tmp_path))
     output = result.stdout + result.stderr
     assert result.returncode != 0, f"validator output was: {output!r}"
+    assert "missing required file" in output, f"validator output was: {output!r}"
     assert "POWER.md" in output, f"validator output was: {output!r}"
 
 
@@ -53,10 +55,11 @@ def test_validator_fails_when_powermd_missing_frontmatter(tmp_path):
     """POWER.md exists but has no '---' fence — validator should fail with a frontmatter message."""
     power_md = tmp_path / "POWER.md"
     power_md.write_text("# My Power\n\nSome content without any frontmatter.\n", encoding="utf-8")
+    (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
     result = run_validator(str(tmp_path))
     output = result.stdout + result.stderr
     assert result.returncode != 0, f"validator output was: {output!r}"
-    assert "frontmatter" in output.lower(), f"validator output was: {output!r}"
+    assert "POWER.md frontmatter" in output, f"validator output was: {output!r}"
 
 
 def test_validator_fails_when_frontmatter_missing_required_field(tmp_path):
@@ -73,10 +76,11 @@ def test_validator_fails_when_frontmatter_missing_required_field(tmp_path):
         "# Test Power\n",
         encoding="utf-8",
     )
+    (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
     result = run_validator(str(tmp_path))
     output = result.stdout + result.stderr
     assert result.returncode != 0, f"validator output was: {output!r}"
-    assert "keywords" in output, f"validator output was: {output!r}"
+    assert "missing field 'keywords'" in output, f"validator output was: {output!r}"
 
 
 def test_validator_passes_with_complete_powermd(tmp_path):
@@ -203,3 +207,29 @@ def test_validator_fails_when_url_missing_token_placeholder(tmp_path):
     output = result.stdout + result.stderr
     assert result.returncode != 0, f"validator output was: {output!r}"
     assert "BRIGHTDATA_API_KEY" in output, f"validator output was: {output!r}"
+
+
+def test_validator_fails_when_mcp_servers_is_not_an_object(tmp_path):
+    """mcp.json's mcpServers field is a JSON array, not an object — validator should fail cleanly."""
+    (tmp_path / "POWER.md").write_text(VALID_POWER_MD, encoding="utf-8")
+    (tmp_path / "mcp.json").write_text(
+        '{"mcpServers": [{"url": "https://example.com"}]}',
+        encoding="utf-8",
+    )
+    result = run_validator(str(tmp_path))
+    output = result.stdout + result.stderr
+    assert result.returncode != 0, f"validator output was: {output!r}"
+    assert "mcpServers must be an object" in output, f"validator output was: {output!r}"
+
+
+def test_validator_fails_when_brightdata_entry_is_not_an_object(tmp_path):
+    """mcp.json's brightdata value is a string instead of an object — validator should fail cleanly."""
+    (tmp_path / "POWER.md").write_text(VALID_POWER_MD, encoding="utf-8")
+    (tmp_path / "mcp.json").write_text(
+        '{"mcpServers": {"brightdata": "https://mcp.brightdata.com/mcp?token=${BRIGHTDATA_API_KEY}"}}',
+        encoding="utf-8",
+    )
+    result = run_validator(str(tmp_path))
+    output = result.stdout + result.stderr
+    assert result.returncode != 0, f"validator output was: {output!r}"
+    assert "brightdata must be an object" in output, f"validator output was: {output!r}"

@@ -60,13 +60,18 @@ def main(argv: list[str]) -> int:
             failures.append(f"mcp.json: invalid JSON ({exc})")
         else:
             servers = data.get("mcpServers", {})
-            bd = servers.get("brightdata")
-            if not bd:
-                failures.append("mcp.json: missing mcpServers.brightdata entry")
-            elif "${BRIGHTDATA_API_KEY}" not in bd.get("url", ""):
-                failures.append(
-                    "mcp.json: brightdata.url must reference ${BRIGHTDATA_API_KEY}"
-                )
+            if not isinstance(servers, dict):
+                failures.append("mcp.json: mcpServers must be an object")
+            else:
+                bd = servers.get("brightdata")
+                if not bd:
+                    failures.append("mcp.json: missing mcpServers.brightdata entry")
+                elif not isinstance(bd, dict):
+                    failures.append("mcp.json: mcpServers.brightdata must be an object")
+                elif "${BRIGHTDATA_API_KEY}" not in bd.get("url", ""):
+                    failures.append(
+                        "mcp.json: brightdata.url must reference ${BRIGHTDATA_API_KEY}"
+                    )
 
     if failures:
         for f in failures:
