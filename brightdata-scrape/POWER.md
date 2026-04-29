@@ -26,7 +26,7 @@ Before using this power, complete the following.
 
 ### Step 1: Get a Bright Data API token
 
-Sign up (or log in) at [https://brightdata.com](https://brightdata.com). Generate an API token at [https://brightdata.com/cp/setting/users](https://brightdata.com/cp/setting/users). The free tier includes **5,000 requests per month** including Pro tools.
+Sign up (or log in) at [Sign up at brightdata.com](https://brightdata.com). Generate an API token at [API token settings](https://brightdata.com/cp/setting/users). The free tier includes **5,000 requests per month** including Pro tools.
 
 ### Step 2: Configure the token (pick one)
 
@@ -63,7 +63,7 @@ The default Web Unlocker zone is named `unblocker` on new accounts. If you've re
 export BRIGHTDATA_UNLOCKER_ZONE=<your-zone-name>
 ```
 
-Or create / rename a zone at [https://brightdata.com/cp/zones](https://brightdata.com/cp/zones).
+Or create / rename a zone at [zone management page](https://brightdata.com/cp/zones).
 
 ---
 

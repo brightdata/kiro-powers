@@ -21,8 +21,9 @@ def run_validator(*args: str) -> subprocess.CompletedProcess:
 def test_validator_runs_and_reports_missing_power_md(tmp_path):
     """With a directory that has no POWER.md, validator should fail and mention POWER.md."""
     result = run_validator(str(tmp_path))
-    assert result.returncode != 0
-    assert "POWER.md" in (result.stdout + result.stderr)
+    output = result.stdout + result.stderr
+    assert result.returncode != 0, f"validator output was: {output!r}"
+    assert "POWER.md" in output, f"validator output was: {output!r}"
 
 
 def test_validator_fails_when_powermd_missing_frontmatter(tmp_path):
@@ -30,9 +31,9 @@ def test_validator_fails_when_powermd_missing_frontmatter(tmp_path):
     power_md = tmp_path / "POWER.md"
     power_md.write_text("# My Power\n\nSome content without any frontmatter.\n", encoding="utf-8")
     result = run_validator(str(tmp_path))
-    assert result.returncode != 0
     output = result.stdout + result.stderr
-    assert "frontmatter" in output.lower()
+    assert result.returncode != 0, f"validator output was: {output!r}"
+    assert "frontmatter" in output.lower(), f"validator output was: {output!r}"
 
 
 def test_validator_fails_when_frontmatter_missing_required_field(tmp_path):
@@ -50,9 +51,9 @@ def test_validator_fails_when_frontmatter_missing_required_field(tmp_path):
         encoding="utf-8",
     )
     result = run_validator(str(tmp_path))
-    assert result.returncode != 0
     output = result.stdout + result.stderr
-    assert "keywords" in output
+    assert result.returncode != 0, f"validator output was: {output!r}"
+    assert "keywords" in output, f"validator output was: {output!r}"
 
 
 def test_validator_passes_with_complete_powermd(tmp_path):
@@ -71,5 +72,62 @@ def test_validator_passes_with_complete_powermd(tmp_path):
         encoding="utf-8",
     )
     result = run_validator(str(tmp_path))
-    assert result.returncode == 0
-    assert "OK" in result.stdout
+    output = result.stdout + result.stderr
+    assert result.returncode == 0, f"validator output was: {output!r}"
+    assert "OK" in result.stdout, f"validator output was: {output!r}"
+
+
+def test_validator_accepts_crlf_line_endings(tmp_path):
+    """A POWER.md saved with CRLF line endings should still parse correctly."""
+    power_md = tmp_path / "POWER.md"
+    power_md.write_text(
+        "---\r\n"
+        "name: test-power\r\n"
+        "displayName: Test Power\r\n"
+        "description: A test power.\r\n"
+        'keywords: ["test"]\r\n'
+        "author: Test Author\r\n"
+        "---\r\n"
+        "\r\n"
+        "# Test Power\r\n",
+        encoding="utf-8",
+    )
+    result = run_validator(str(tmp_path))
+    assert result.returncode == 0, f"unexpected failure: {result.stdout + result.stderr!r}"
+
+
+def test_validator_accepts_utf8_bom(tmp_path):
+    """A POWER.md saved with a UTF-8 BOM should still parse correctly."""
+    power_md = tmp_path / "POWER.md"
+    power_md.write_text(
+        "﻿"  # BOM
+        "---\n"
+        "name: test-power\n"
+        "displayName: Test Power\n"
+        "description: A test power.\n"
+        'keywords: ["test"]\n'
+        "author: Test Author\n"
+        "---\n"
+        "\n"
+        "# Test Power\n",
+        encoding="utf-8",
+    )
+    result = run_validator(str(tmp_path))
+    assert result.returncode == 0, f"unexpected failure: {result.stdout + result.stderr!r}"
+
+
+def test_validator_accepts_closing_fence_at_eof(tmp_path):
+    """A POWER.md whose last bytes are '---' (no trailing newline) should still parse correctly."""
+    power_md = tmp_path / "POWER.md"
+    power_md.write_text(
+        "---\n"
+        "name: test-power\n"
+        "displayName: Test Power\n"
+        "description: A test power.\n"
+        'keywords: ["test"]\n'
+        "author: Test Author\n"
+        "---",  # no trailing newline
+        encoding="utf-8",
+    )
+    result = run_validator(str(tmp_path))
+    assert result.returncode == 0, f"unexpected failure: {result.stdout + result.stderr!r}"

@@ -7,6 +7,7 @@ Exit code 0 on success, 1 on any check failure.
 Prints a summary of checks run and any failures.
 """
 from __future__ import annotations
+import re
 import sys
 from pathlib import Path
 
@@ -31,16 +32,18 @@ def main(argv: list[str]) -> int:
 
     # Frontmatter check (after the existence block above)
     if power_md.is_file():
-        text = power_md.read_text(encoding="utf-8")
+        # Normalize: strip BOM and convert CRLF to LF so authors on Windows or
+        # editors that emit BOMs don't trigger misleading "missing fence" errors.
+        text = power_md.read_text(encoding="utf-8").lstrip("﻿").replace("\r\n", "\n")
         if not text.startswith("---\n"):
             failures.append("POWER.md frontmatter: must start with '---' fence")
         else:
-            # crude YAML-front-matter parse (no PyYAML dep)
-            end = text.find("\n---\n", 4)
-            if end == -1:
+            # Closing fence: '\n---' followed by either a newline or end-of-string.
+            end_match = re.search(r"\n---(\n|$)", text[4:])
+            if end_match is None:
                 failures.append("POWER.md frontmatter: missing closing '---' fence")
             else:
-                front = text[4:end]
+                front = text[4:4 + end_match.start()]
                 required_fields = ["name:", "displayName:", "description:", "keywords:", "author:"]
                 for field in required_fields:
                     if field not in front:
