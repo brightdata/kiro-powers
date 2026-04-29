@@ -509,3 +509,13 @@ def test_template_ts_cheerio_has_expected_exports_and_imports():
     assert "https://api.brightdata.com/request" in src
     assert "{{TARGET_NAME}}" in src
     assert "{{TARGET_URL}}" in src
+
+
+def test_template_next_app_router_route():
+    """Next.js App Router route must export GET handler and import the module."""
+    p = POWER_DIR / "templates" / "route" / "next-app-router.ts"
+    assert p.is_file(), f"missing {p}"
+    src = p.read_text(encoding="utf-8")
+    assert "export async function GET" in src or "export const GET" in src
+    assert "scrape{{TARGET_NAME}}" in src or "scrape" in src.lower()
+    assert "NextResponse" in src or "Response" in src
