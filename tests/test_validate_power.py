@@ -674,3 +674,66 @@ def test_template_py_stdlib_module():
     assert "html.parser" in src or "HTMLParser" in src
     assert "def scrape_" in src
     assert "BRIGHTDATA_API_KEY" in src
+
+
+def test_template_next_pages_router():
+    p = POWER_DIR / "templates" / "route" / "next-pages-router.ts"
+    assert p.is_file()
+    src = p.read_text(encoding="utf-8")
+    assert "scrape{{TARGET_NAME}}" in src
+    assert "NextApiRequest" in src or "NextApiResponse" in src
+    assert "export default" in src
+
+
+def test_template_express_route():
+    p = POWER_DIR / "templates" / "route" / "express.ts"
+    assert p.is_file()
+    src = p.read_text(encoding="utf-8")
+    assert "scrape{{TARGET_NAME}}" in src
+    assert "express" in src.lower() or "Router" in src
+
+
+def test_template_fastify_route():
+    p = POWER_DIR / "templates" / "route" / "fastify.ts"
+    assert p.is_file()
+    src = p.read_text(encoding="utf-8")
+    assert "scrape{{TARGET_NAME}}" in src
+    assert "fastify" in src.lower()
+
+
+def test_template_hono_route():
+    p = POWER_DIR / "templates" / "route" / "hono.ts"
+    assert p.is_file()
+    src = p.read_text(encoding="utf-8")
+    assert "scrape{{TARGET_NAME}}" in src
+    assert "Hono" in src or "hono" in src
+
+
+def test_template_koa_route():
+    p = POWER_DIR / "templates" / "route" / "koa.ts"
+    assert p.is_file()
+    src = p.read_text(encoding="utf-8")
+    assert "scrape{{TARGET_NAME}}" in src
+    assert "Router" in src or "koa" in src.lower()
+
+
+def test_template_flask_route():
+    import ast
+    p = POWER_DIR / "templates" / "route" / "flask.py"
+    assert p.is_file()
+    src = p.read_text(encoding="utf-8")
+    src_filled = src.replace("{{TARGET_NAME}}", "x")
+    ast.parse(src_filled)
+    assert "Blueprint" in src
+    assert "scrape_{{TARGET_NAME}}" in src
+
+
+def test_template_django_route():
+    import ast
+    p = POWER_DIR / "templates" / "route" / "django.py"
+    assert p.is_file()
+    src = p.read_text(encoding="utf-8")
+    src_filled = src.replace("{{TARGET_NAME}}", "x")
+    ast.parse(src_filled)
+    assert "scrape_{{TARGET_NAME}}" in src
+    assert "JsonResponse" in src or "HttpResponse" in src
