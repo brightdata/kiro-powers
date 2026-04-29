@@ -374,3 +374,21 @@ def test_phase3_integrate_references_template_directories():
         "never overwrite", "do not overwrite",  # safety
     ]:
         assert keyword.lower() in text.lower(), f"phase3 missing keyword: {keyword}"
+
+
+def test_phase4_covers_mcp_and_smoke_test():
+    """Phase 4 must document MCP wiring (project-level + user-level) and the smoke test loop."""
+    p = POWER_DIR / "steering" / "phase4-mcp-and-verify.md"
+    assert p.is_file(), f"missing {p}"
+    text = p.read_text(encoding="utf-8")
+    for keyword in [
+        ".kiro/settings/mcp.json",
+        "~/.kiro/settings/mcp.json",
+        "smoke test",
+        "https://mcp.brightdata.com/mcp",
+        "${BRIGHTDATA_API_KEY}",
+        "&pro=1",        # pro tools
+        "&groups=",      # selective groups
+        "phase 2",       # back-link on smoke-test failure
+    ]:
+        assert keyword.lower() in text.lower(), f"phase4 missing keyword: {keyword}"
