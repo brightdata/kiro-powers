@@ -29,6 +29,23 @@ def main(argv: list[str]) -> int:
     if not power_md.is_file():
         failures.append(f"missing required file: {power_md}")
 
+    # Frontmatter check (after the existence block above)
+    if power_md.is_file():
+        text = power_md.read_text(encoding="utf-8")
+        if not text.startswith("---\n"):
+            failures.append("POWER.md frontmatter: must start with '---' fence")
+        else:
+            # crude YAML-front-matter parse (no PyYAML dep)
+            end = text.find("\n---\n", 4)
+            if end == -1:
+                failures.append("POWER.md frontmatter: missing closing '---' fence")
+            else:
+                front = text[4:end]
+                required_fields = ["name:", "displayName:", "description:", "keywords:", "author:"]
+                for field in required_fields:
+                    if field not in front:
+                        failures.append(f"POWER.md frontmatter: missing field '{field.rstrip(':')}'")
+
     if failures:
         for f in failures:
             fail(f)
