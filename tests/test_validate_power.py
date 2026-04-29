@@ -371,7 +371,7 @@ def test_phase3_integrate_references_template_directories():
         "BRIGHTDATA_API_KEY", "BRIGHTDATA_UNLOCKER_ZONE",
         ".env.example", "README.md",
         "confirmation",  # gate before writing
-        "never overwrite", "do not overwrite",  # safety
+        "never overwrite",  # safety
     ]:
         assert keyword.lower() in text.lower(), f"phase3 missing keyword: {keyword}"
 

@@ -85,6 +85,38 @@ Do NOT ask separately about pagination type, output format, or language preferen
 - **Output format** → defaults to typed return value; the caller decides what to do with it.
 - **Language** → already determined by manifest (TypeScript for `package.json`, Python for `pyproject.toml`/`requirements.txt`); greenfield is handled in Step 1.
 
+### Canonical framework slugs
+
+When emitting the decision record's `framework` field, use these exact slugs (so Phase 3's template lookup works):
+
+| Framework | Slug |
+|-----------|------|
+| Next.js (App Router) | `next-app-router` |
+| Next.js (Pages Router) | `next-pages-router` |
+| Express | `express` |
+| Fastify | `fastify` |
+| Hono | `hono` |
+| Koa | `koa` |
+| NestJS | `nestjs` |
+| Remix | `remix` |
+| FastAPI | `fastapi` |
+| Flask | `flask` |
+| Django | `django` |
+| aiohttp | `aiohttp` |
+| Starlette | `starlette` |
+| LangChain (TS) | `langchain-ts` |
+| LangChain (Python) | `langchain-py` |
+| Anthropic SDK (TS) | `anthropic-sdk-ts` |
+| Anthropic SDK (Python) | `anthropic-sdk-py` |
+| OpenAI SDK (TS) | `openai-ts` |
+| OpenAI SDK (Python) | `openai-py` |
+| Mastra | `mastra` |
+| Vercel AI SDK | `vercel-ai-sdk` |
+| LlamaIndex | `llama-index` |
+| CrewAI | `crewai` |
+
+If the detected framework isn't in this list, use the bare lowercase package name and tell the user a fallback template will be used.
+
 ## Step 5: Present plan and wait for confirmation
 
 Format:

@@ -8,8 +8,8 @@ Use the Phase 1 decision record's `pattern` and `framework` fields. Look up the 
 
 | Pattern | Framework | Template path |
 |---------|-----------|---------------|
-| `module` | TypeScript | `brightdata-scrape/templates/module/ts-cheerio.ts` (if user has cheerio) or `ts-fetch.ts` (otherwise) |
-| `module` | Python | `brightdata-scrape/templates/module/py-bs4.py` (if bs4 acceptable) or `py-stdlib.py` (otherwise) |
+| `module` | TypeScript | `templates/module/ts-cheerio.ts` (if user has cheerio) or `templates/module/ts-fetch.ts` (otherwise) |
+| `module` | Python | `templates/module/py-bs4.py` (if bs4 acceptable) or `templates/module/py-stdlib.py` (otherwise) |
 | `route` | Next.js App Router | `templates/route/next-app-router.ts` |
 | `route` | Next.js Pages Router | `templates/route/next-pages-router.ts` |
 | `route` | Express | `templates/route/express.ts` |
@@ -107,7 +107,6 @@ OK to write?
 - **Never overwrite an existing scraper file.** If `src/scrapers/competitor_prices.ts` exists, suggest `competitor_prices_2.ts` or ask the user where to put it.
 - **Never overwrite `README.md` or `.env.example` wholesale.** Append only. If `BRIGHTDATA_API_KEY` is already in `.env.example`, skip it. If a `## Web scraping` section already exists, append a sub-section.
 - **Never duplicate a route registration line.** If the user's `app.ts` already has `app.use('/api/scrape', ...)`, skip the suggestion.
-- **Do not overwrite** any file without explicit user confirmation if it already exists.
 
 ## Step 7: Output
 
