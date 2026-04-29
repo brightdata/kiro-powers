@@ -737,3 +737,58 @@ def test_template_django_route():
     ast.parse(src_filled)
     assert "scrape_{{TARGET_NAME}}" in src
     assert "JsonResponse" in src or "HttpResponse" in src
+
+
+def test_template_langchain_ts_tool():
+    p = POWER_DIR / "templates" / "tool" / "langchain-ts.ts"
+    assert p.is_file()
+    src = p.read_text(encoding="utf-8")
+    assert "scrape{{TARGET_NAME}}" in src
+    assert "langchain" in src.lower() or "@langchain" in src
+
+
+def test_template_langchain_py_tool():
+    import ast
+    p = POWER_DIR / "templates" / "tool" / "langchain-py.py"
+    assert p.is_file()
+    src = p.read_text(encoding="utf-8")
+    src_filled = src.replace("{{TARGET_NAME}}", "x").replace("{{TARGET_URL}}", "https://e.com")
+    ast.parse(src_filled)
+    assert "scrape_{{TARGET_NAME}}" in src
+    assert "langchain" in src.lower()
+
+
+def test_template_openai_ts_tool():
+    p = POWER_DIR / "templates" / "tool" / "openai-ts.ts"
+    assert p.is_file()
+    src = p.read_text(encoding="utf-8")
+    assert "scrape{{TARGET_NAME}}" in src
+    assert "function" in src.lower()
+    assert "name" in src
+    assert "description" in src
+
+
+def test_template_openai_py_tool():
+    import ast
+    p = POWER_DIR / "templates" / "tool" / "openai-py.py"
+    assert p.is_file()
+    src = p.read_text(encoding="utf-8")
+    src_filled = src.replace("{{TARGET_NAME}}", "x").replace("{{TARGET_URL}}", "https://e.com")
+    ast.parse(src_filled)
+    assert "scrape_{{TARGET_NAME}}" in src
+
+
+def test_template_mastra_tool():
+    p = POWER_DIR / "templates" / "tool" / "mastra.ts"
+    assert p.is_file()
+    src = p.read_text(encoding="utf-8")
+    assert "scrape{{TARGET_NAME}}" in src
+    assert "mastra" in src.lower()
+
+
+def test_template_vercel_ai_sdk_tool():
+    p = POWER_DIR / "templates" / "tool" / "vercel-ai-sdk.ts"
+    assert p.is_file()
+    src = p.read_text(encoding="utf-8")
+    assert "scrape{{TARGET_NAME}}" in src
+    assert "from \"ai\"" in src or "from 'ai'" in src
