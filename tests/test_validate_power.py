@@ -343,3 +343,19 @@ def test_phase1_detect_covers_all_pattern_branches():
                     "next", "express", "fastapi", "flask",
                     "langchain", "anthropic", "openai"]:
         assert keyword.lower() in text.lower(), f"phase1 missing keyword: {keyword}"
+
+
+def test_phase2_playbook_covers_all_apis_and_pagination_patterns():
+    """Phase 2 must document the four-API decision tree and pagination patterns."""
+    p = POWER_DIR / "steering" / "phase2-scraping-playbook.md"
+    assert p.is_file(), f"missing {p}"
+    text = p.read_text(encoding="utf-8")
+    for keyword in [
+        "Web Unlocker", "Browser API", "Web Scraper API", "SERP API",
+        "data attributes", "selectors",
+        "url-based", "next-link", "cursor", "infinite scroll",
+        "concurrency", "semaphore",
+        "scraper-builder",  # pointer to the long-form skill
+        "https://api.brightdata.com/datasets/list",  # pre-built lookup
+    ]:
+        assert keyword.lower() in text.lower(), f"phase2 missing keyword: {keyword}"
