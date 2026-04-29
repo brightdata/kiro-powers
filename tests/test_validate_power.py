@@ -9,6 +9,29 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 POWER_DIR = REPO_ROOT / "brightdata-scrape"
 
+VALID_POWER_MD = (
+    "---\n"
+    "name: test-power\n"
+    "displayName: Test Power\n"
+    "description: A test power.\n"
+    'keywords: ["test"]\n'
+    "author: Test Author\n"
+    "---\n"
+    "\n"
+    "# Test Power\n"
+)
+
+VALID_MCP_JSON = (
+    '{\n'
+    '  "mcpServers": {\n'
+    '    "brightdata": {\n'
+    '      "url": "https://mcp.brightdata.com/mcp?token=${BRIGHTDATA_API_KEY}",\n'
+    '      "disabled": false\n'
+    '    }\n'
+    '  }\n'
+    '}\n'
+)
+
 
 def run_validator(*args: str) -> subprocess.CompletedProcess:
     return subprocess.run(
@@ -71,6 +94,7 @@ def test_validator_passes_with_complete_powermd(tmp_path):
         "# Test Power\n",
         encoding="utf-8",
     )
+    (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
     result = run_validator(str(tmp_path))
     output = result.stdout + result.stderr
     assert result.returncode == 0, f"validator output was: {output!r}"
@@ -92,6 +116,7 @@ def test_validator_accepts_crlf_line_endings(tmp_path):
         "# Test Power\r\n",
         encoding="utf-8",
     )
+    (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
     result = run_validator(str(tmp_path))
     assert result.returncode == 0, f"unexpected failure: {result.stdout + result.stderr!r}"
 
@@ -112,6 +137,7 @@ def test_validator_accepts_utf8_bom(tmp_path):
         "# Test Power\n",
         encoding="utf-8",
     )
+    (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
     result = run_validator(str(tmp_path))
     assert result.returncode == 0, f"unexpected failure: {result.stdout + result.stderr!r}"
 
@@ -129,5 +155,51 @@ def test_validator_accepts_closing_fence_at_eof(tmp_path):
         "---",  # no trailing newline
         encoding="utf-8",
     )
+    (tmp_path / "mcp.json").write_text(VALID_MCP_JSON, encoding="utf-8")
     result = run_validator(str(tmp_path))
     assert result.returncode == 0, f"unexpected failure: {result.stdout + result.stderr!r}"
+
+
+def test_validator_fails_when_mcp_json_missing(tmp_path):
+    """Directory has a valid POWER.md but no mcp.json — validator should fail mentioning mcp.json."""
+    (tmp_path / "POWER.md").write_text(VALID_POWER_MD, encoding="utf-8")
+    result = run_validator(str(tmp_path))
+    output = result.stdout + result.stderr
+    assert result.returncode != 0, f"validator output was: {output!r}"
+    assert "mcp.json" in output, f"validator output was: {output!r}"
+
+
+def test_validator_fails_when_mcp_json_invalid_json(tmp_path):
+    """mcp.json contains malformed JSON — validator should fail with an invalid JSON message."""
+    (tmp_path / "POWER.md").write_text(VALID_POWER_MD, encoding="utf-8")
+    (tmp_path / "mcp.json").write_text('{"mcpServers":', encoding="utf-8")
+    result = run_validator(str(tmp_path))
+    output = result.stdout + result.stderr
+    assert result.returncode != 0, f"validator output was: {output!r}"
+    assert "invalid" in output.lower() or "json" in output.lower(), f"validator output was: {output!r}"
+
+
+def test_validator_fails_when_brightdata_server_missing(tmp_path):
+    """mcp.json is valid JSON but has no mcpServers.brightdata key — validator should fail naming brightdata."""
+    (tmp_path / "POWER.md").write_text(VALID_POWER_MD, encoding="utf-8")
+    (tmp_path / "mcp.json").write_text(
+        '{"mcpServers": {"other": {"url": "https://example.com"}}}\n',
+        encoding="utf-8",
+    )
+    result = run_validator(str(tmp_path))
+    output = result.stdout + result.stderr
+    assert result.returncode != 0, f"validator output was: {output!r}"
+    assert "brightdata" in output, f"validator output was: {output!r}"
+
+
+def test_validator_fails_when_url_missing_token_placeholder(tmp_path):
+    """mcp.json has a brightdata server but its URL lacks ${BRIGHTDATA_API_KEY} — validator should fail."""
+    (tmp_path / "POWER.md").write_text(VALID_POWER_MD, encoding="utf-8")
+    (tmp_path / "mcp.json").write_text(
+        '{"mcpServers": {"brightdata": {"url": "https://mcp.brightdata.com/mcp"}}}\n',
+        encoding="utf-8",
+    )
+    result = run_validator(str(tmp_path))
+    output = result.stdout + result.stderr
+    assert result.returncode != 0, f"validator output was: {output!r}"
+    assert "BRIGHTDATA_API_KEY" in output, f"validator output was: {output!r}"

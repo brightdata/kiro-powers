@@ -7,6 +7,7 @@ Exit code 0 on success, 1 on any check failure.
 Prints a summary of checks run and any failures.
 """
 from __future__ import annotations
+import json
 import re
 import sys
 from pathlib import Path
@@ -48,6 +49,24 @@ def main(argv: list[str]) -> int:
                 for field in required_fields:
                     if field not in front:
                         failures.append(f"POWER.md frontmatter: missing field '{field.rstrip(':')}'")
+
+    mcp_path = power_dir / "mcp.json"
+    if not mcp_path.is_file():
+        failures.append("mcp.json: missing required file")
+    else:
+        try:
+            data = json.loads(mcp_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            failures.append(f"mcp.json: invalid JSON ({exc})")
+        else:
+            servers = data.get("mcpServers", {})
+            bd = servers.get("brightdata")
+            if not bd:
+                failures.append("mcp.json: missing mcpServers.brightdata entry")
+            elif "${BRIGHTDATA_API_KEY}" not in bd.get("url", ""):
+                failures.append(
+                    "mcp.json: brightdata.url must reference ${BRIGHTDATA_API_KEY}"
+                )
 
     if failures:
         for f in failures:
