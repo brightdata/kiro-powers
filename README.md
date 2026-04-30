@@ -6,7 +6,6 @@ A Bright Data Kiro power for adding web scraping to any application.
 
 - **[`brightdata-scrape/`](brightdata-scrape/)** — the Kiro power itself (`POWER.md`, `mcp.json`, steering files, code templates). Install as a Kiro power from this directory, or copy `brightdata-scrape/` into the upstream `kirodotdev/powers` collection to contribute.
 - **`powers/`** — a clone of [`kirodotdev/powers`](https://github.com/kirodotdev/powers) used as inspiration. Not part of this repo's tree (gitignored).
-- **[`docs/superpowers/`](docs/superpowers/)** — design spec and implementation plan for `brightdata-scrape`.
 - **[`scripts/validate_power.py`](scripts/validate_power.py)** — CLI to validate the power's structure.
 - **[`tests/test_validate_power.py`](tests/test_validate_power.py)** — pytest suite for the validator.
 
@@ -30,6 +29,4 @@ python3 -m pytest tests/test_validate_power.py -v
 
 ## See also
 
-- Spec: [`docs/superpowers/specs/2026-04-29-brightdata-scrape-power-design.md`](docs/superpowers/specs/2026-04-29-brightdata-scrape-power-design.md)
-- Implementation plan: [`docs/superpowers/plans/2026-04-29-brightdata-scrape-power.md`](docs/superpowers/plans/2026-04-29-brightdata-scrape-power.md)
 - Bright Data docs: [docs.brightdata.com](https://docs.brightdata.com)
