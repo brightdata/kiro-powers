@@ -83,3 +83,11 @@ The orchestrator runs four phases in sequence with confirmation gates between ea
 4. **MCP & verify** — wire the Bright Data MCP server, run a smoke test, write a README snippet.
 
 **Do NOT improvise. Do NOT skip phases.** The steering files contain the exact instructions for each.
+
+---
+
+## License and support
+
+- **License** — This power and the underlying [Bright Data MCP server](https://github.com/brightdata/brightdata-mcp) are released under the [MIT license](https://github.com/brightdata/brightdata-mcp/blob/main/LICENSE). The Bright Data platform tools it calls (Web Unlocker, SERP API, Web Data APIs, Browser API) are commercial services governed by Bright Data's [License Agreement](https://brightdata.com/license) and [Acceptable Use Policy](https://brightdata.com/acceptable-use-policy).
+- **Privacy policy** — [brightdata.com/privacy](https://brightdata.com/privacy)
+- **Support & contact** — 24/7 live support at [brightdata.com/contact](https://brightdata.com/contact), the [Bright Data docs](https://docs.brightdata.com), or open an issue on the [MCP server repo](https://github.com/brightdata/brightdata-mcp/issues).
